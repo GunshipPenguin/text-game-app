@@ -54,8 +54,26 @@ public class TextGameLandingActivity extends AppCompatActivity {
 
     }
 
-    protected void eventHandler(JSONObject event) {
+    protected void eventHandler(Event event) {
         // process event
+        try {
+            String eventType = event.getEvent().getString("event_type");
+
+            // Handle (server -> client) events
+            switch(eventType) {
+                case Event.GAME_LOBBY_STARTED:
+                    break;
+                case Event.NEW_REGISTRATION:
+                    break;
+                case Event.GAME_STARTING:
+                    break;
+                default:
+                    break;
+
+            }
+        } catch(JSONException e) {
+            Log.e("BROKEN_EVENT",e.getMessage());
+        }
     }
 
     @Override
@@ -93,49 +111,49 @@ public class TextGameLandingActivity extends AppCompatActivity {
         @Override
         public void onReceive(final Context context, final Intent intent) {
             mPendingResult = goAsync();
-            AsyncTask<Void,Void,List<JSONObject> > asyncHandler = new AsyncTask<Void, Void, List<JSONObject> >() {
+            AsyncTask<Void,Void,List<Event> > asyncHandler = new AsyncTask<Void, Void, List<Event> >() {
                 @Override
-                protected List<JSONObject> doInBackground(Void... voids) {
-                    List<JSONObject> events = new ArrayList<JSONObject>();
+                protected List<Event> doInBackground(Void... voids) {
+                    List<Event> events = new ArrayList<Event>();
                     if (intent.getAction().equals(Telephony.Sms.Intents.SMS_RECEIVED_ACTION)) {
                         SmsMessage[] messages = Telephony.Sms.Intents.getMessagesFromIntent(intent);
 
                         for (int i = 0; i < messages.length; ++i) {
-                            if (TextGameLandingActivity.this.mPlayerNumbers.contains(messages[i].getDisplayOriginatingAddress())
-                                    || true) {
-                                Boolean failed = false;
-                                Inflater decompresser = new Inflater();
-                                byte[] messageText = Base64.decode(messages[i].getMessageBody(),Base64.DEFAULT);
-                                decompresser.setInput(messageText,0,messageText.length);
-                                byte[] result = new byte[100];
-                                StringBuilder stringifiedJSON = new StringBuilder();
-                                while (!decompresser.finished()) {
-                                    try{
-                                        decompresser.inflate(result);
-                                    } catch(DataFormatException e) {
-                                        failed = true;
-                                        break;
-                                    }
-
-                                    stringifiedJSON.append(new String(result));
+                            // if the message is from someone unexpected, this will error out
+                            // because we won't be able to parse the format
+                            Boolean failed = false;
+                            Inflater decompresser = new Inflater();
+                            byte[] messageText = Base64.decode(messages[i].getMessageBody(),Base64.DEFAULT);
+                            decompresser.setInput(messageText,0,messageText.length);
+                            byte[] result = new byte[100];
+                            StringBuilder stringifiedJSON = new StringBuilder();
+                            while (!decompresser.finished()) {
+                                try{
+                                    decompresser.inflate(result);
+                                } catch(DataFormatException e) {
+                                    failed = true;
+                                    break;
                                 }
 
-                                if (!failed) {
-                                    try {
-                                        JSONObject event = new JSONObject(stringifiedJSON.toString());
-                                        events.add(event);
-                                    } catch(JSONException e) {
-                                        Log.e("BROKEN_JSON",e.getMessage());
-                                    }
+                                stringifiedJSON.append(new String(result));
+                            }
+
+                            if (!failed) {
+                                try {
+                                    JSONObject event = new JSONObject(stringifiedJSON.toString());
+                                    events.add(new Event(event, messages[i].getDisplayOriginatingAddress()));
+                                } catch(JSONException e) {
+                                    Log.e("BROKEN_JSON",e.getMessage());
                                 }
                             }
                         }
                     }
+
                     return events;
                 }
 
                 @Override
-                protected void onPostExecute(List<JSONObject> events) {
+                protected void onPostExecute(List<Event> events) {
                     if (events != null) {
                         for (int i = 0; i < events.size(); ++i) {
                             TextGameLandingActivity.this.eventHandler(events.get(i));
