@@ -14,18 +14,25 @@ import android.util.Base64;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ListView;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.DataFormatException;
+import java.util.zip.Deflater;
 import java.util.zip.Inflater;
 
 public class TextGameLandingActivity extends AppCompatActivity {
     private LandingTextReceiver mReceiver = null;
     private ArrayList<String> mPlayerNumbers = null;
+    private Button mStartButton = null;
+    private Button mJoinButton = null;
+    private ListView mLobbyListings = null;
+    private Boolean mLobbyLeader = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,7 +43,6 @@ public class TextGameLandingActivity extends AppCompatActivity {
             mReceiver = new LandingTextReceiver();
             registerReceiver(mReceiver, new IntentFilter(Telephony.Sms.Intents.SMS_RECEIVED_ACTION));
         }
-
 
         if (mPlayerNumbers == null) {
             mPlayerNumbers = new  ArrayList<String>();
@@ -62,10 +68,13 @@ public class TextGameLandingActivity extends AppCompatActivity {
             // Handle (server -> client) events
             switch(eventType) {
                 case Event.GAME_LOBBY_STARTED:
+                    handleGameLobbyStarted(event);
                     break;
                 case Event.NEW_REGISTRATION:
+                    handleNewRegistration(event);
                     break;
                 case Event.GAME_STARTING:
+                    handleGameStarting(event);
                     break;
                 default:
                     break;
@@ -104,6 +113,83 @@ public class TextGameLandingActivity extends AppCompatActivity {
             unregisterReceiver(mReceiver);
             mReceiver = null;
         }
+    }
+
+    private Button getStartButton(AppCompatActivity activity) {
+        if (mStartButton == null) {
+            mStartButton = activity.findViewById(R.id.startButton);
+        }
+        return mStartButton;
+    }
+
+    private Button getJoinButton(AppCompatActivity activity) {
+        if (mJoinButton == null) {
+            mJoinButton = activity.findViewById(R.id.joinButton);
+        }
+        return mJoinButton;
+    }
+
+    private ListView getLobbyList(AppCompatActivity activity) {
+        if (mLobbyListings == null) {
+            mLobbyListings = activity.findViewById(R.id.playerList);
+        }
+        return mLobbyListings;
+    }
+
+    private void handleOpenLobby() {
+        // request the server to open the lobby
+    }
+
+    private void handleGameLobbyStarted(Event event) {
+        mLobbyLeader = true;
+        getStartButton(this).setText(R.string.start_game);
+        getStartButton(this).setEnabled(true);
+        getJoinButton(this).setEnabled(false);
+    }
+
+    private void handleSelfRegistration() {
+        //send a request to the server to join a lobby
+    }
+
+    private void handleNewRegistration(Event event) {
+        try {
+            JSONArray numbers = event.getEvent().getJSONArray("players_in_lobby");
+
+            for (int i = 0; i < numbers.length(); i++) {
+                String temp = numbers.getString(i);
+                if (!mPlayerNumbers.contains(temp)) {
+                    mPlayerNumbers.add(temp);
+                }
+            }
+
+            // TODO: Call a function to update the listview
+            // Alternatively add players in the loop above with a separate asynchronous call
+
+            if (!mLobbyLeader) {
+                getJoinButton(this).setEnabled(false);
+                getStartButton(this).setEnabled(false);
+            }
+
+        } catch(JSONException e) {
+            Log.e("REGISTRATION_BROKEN",e.getMessage());
+        }
+    }
+
+    private void handleRequestStartGame(Event event) {
+        //we are requesting the server to start the game
+    }
+
+    private void handleGameStarting(Event event) {
+        String stringifiedJSON = event.getEvent().toString();
+        Deflater compressor = new Deflater();
+        compressor.setInput(stringifiedJSON.getBytes());
+        byte[] result = new byte[300];
+        compressor.finish();
+        compressor.deflate(result);
+        String compressedJSON = Base64.encodeToString(result,Base64.DEFAULT);
+
+        // launch an intent
+
     }
 
     public class LandingTextReceiver extends BroadcastReceiver {
