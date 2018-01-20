@@ -1,31 +1,4 @@
-<<<<<<< HEAD
-package com.gunshippenguin.textgame;
 
-import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
-
-import android.widget.Button;
-import android.view.View;
-import android.content.Intent;
-
-public class TextGameLandingActivity extends AppCompatActivity {
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_text_game_landing);
-
-        Button startButton = (Button)findViewById(R.id.startButton);
-
-        startButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                startActivity(new Intent(TextGameLandingActivity.this, TextGameMainActivity.class));
-            }
-        });
-    }
-}
-=======
 package com.gunshippenguin.textgame;
 
 import android.content.BroadcastReceiver;
@@ -68,6 +41,15 @@ public class TextGameLandingActivity extends AppCompatActivity {
         if (mPlayerNumbers == null) {
             mPlayerNumbers = new  ArrayList<String>();
         }
+
+        Button startButton = (Button)findViewById(R.id.startButton);
+        startButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(TextGameLandingActivity.this, TextGameMainActivity.class));
+            }
+        });
+
     }
 
     protected void eventHandler(JSONObject event) {
@@ -165,4 +147,3 @@ public class TextGameLandingActivity extends AppCompatActivity {
         }
     }
 }
->>>>>>> 3e9c75654c6ecd3e71bce19a80f761365e82d63b
