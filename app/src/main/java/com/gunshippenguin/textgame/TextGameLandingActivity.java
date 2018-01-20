@@ -6,17 +6,17 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.AsyncTask;
+import android.os.Bundle;
 import android.provider.Telephony;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.telephony.SmsMessage;
 import android.util.Base64;
 import android.util.Log;
-import android.widget.Toast;
+import android.view.View;
+import android.widget.Button;
 
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.w3c.dom.Text;
 
 import java.util.ArrayList;
 import java.util.List;
