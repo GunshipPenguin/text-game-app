@@ -123,7 +123,7 @@ public class TextGameMainActivity extends AppCompatActivity
                 String message = messageField.getText().toString();
                 if (message.length() > 0){
                     // Replace with iteration of users
-                    sendSMS("6478353527", message);
+                    sendChatMessage("6478353527", message);
                     InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
                     imm.hideSoftInputFromWindow(sendMessageButton.getWindowToken(), 0); // close keyboard
                     messageField.setText(""); // clear
@@ -489,8 +489,18 @@ public class TextGameMainActivity extends AppCompatActivity
     }
 
 
-    private void sendSMS(String phoneNumber, String message) {
+    private void sendChatMessage(String phoneNumber, String message) {
         SmsManager sms = SmsManager.getDefault();
-        sms.sendTextMessage(phoneNumber, null, message, null, null);
+
+        try {
+            JSONObject json = new JSONObject();
+            json.put("event_type", "chat_message");
+            json.put("message", message);
+            String b64Message = Base64.encode(json.toString().getBytes(), Base64.DEFAULT).toString();
+
+            sms.sendTextMessage(phoneNumber, null, b64Message, null, null);
+
+        } catch (Exception e){};
+
     }
 }
