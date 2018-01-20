@@ -2,23 +2,32 @@ package com.gunshippenguin.textgame;
 
 import android.Manifest;
 import android.app.AlertDialog;
+import android.content.BroadcastReceiver;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.database.Cursor;
 import android.graphics.Color;
 import android.location.Location;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.provider.BaseColumns;
 import android.provider.ContactsContract;
+import android.provider.Telephony;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.telephony.SmsManager;
+import android.telephony.SmsMessage;
+import android.util.Base64;
+import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
@@ -45,7 +54,14 @@ import com.google.android.gms.maps.model.MapStyleOptions;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.zip.DataFormatException;
+import java.util.zip.Inflater;
 
 /**
  * This shows how to create a simple activity with a map and a marker on the map.
@@ -58,14 +74,22 @@ public class TextGameMainActivity extends AppCompatActivity
 
     private static final int PERMISSIONS_REQUEST_READ_CONTACTS = 1;
     private static final int PERMISSIONS_REQUEST_LOCATION = 2;
+    private static final int PERMISSIONS_REQUEST_SEND_SMS = 2;
+
     private static final String TIME_FORMAT = "%02d:%02d:%02d";
     private static final String[] CAPTURE_POINT_LABELS = {"A", "B", "C", "D", "E"};
+
+    private LandingTextReceiver mReceiver = null;
+
+    ArrayList<String> mPlayerNumbers;
+
 
     GoogleMap map;
     SupportMapFragment mapFrag;
     LocationRequest mLocationRequest;
     GoogleApiClient mGoogleApiClient;
     Location mLastLocation;
+
     Marker mCurrLocationMarker;
     Marker[] capturePointMarkers = new Marker[3];
     Marker[] playerMarkers = new Marker[2];
@@ -77,6 +101,8 @@ public class TextGameMainActivity extends AppCompatActivity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_text_game_main);
+
+        mPlayerNumbers = getIntent().getStringArrayListExtra("PLAYER_NUMBERS");
 
         // Map Fragment
         SupportMapFragment mapFragment =
@@ -94,9 +120,14 @@ public class TextGameMainActivity extends AppCompatActivity
             @Override
             public void onClick(View v) {
                 // Send the message
-                InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
-                imm.hideSoftInputFromWindow(sendMessageButton.getWindowToken(), 0); // close keyboard
-                messageField.setText(""); // clear
+                String message = messageField.getText().toString();
+                if (message.length() > 0){
+                    // Replace with iteration of users
+                    sendSMS("6478353527", message);
+                    InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
+                    imm.hideSoftInputFromWindow(sendMessageButton.getWindowToken(), 0); // close keyboard
+                    messageField.setText(""); // clear
+                }
             }
         });
 
@@ -125,6 +156,12 @@ public class TextGameMainActivity extends AppCompatActivity
                 countdown.setText("Game Over!");
             }
         }.start();
+
+
+        if (mReceiver == null) {
+            mReceiver = new LandingTextReceiver();
+            registerReceiver(mReceiver, new IntentFilter(Telephony.Sms.Intents.SMS_RECEIVED_ACTION));
+        }
     }
 
     @Override
@@ -137,6 +174,30 @@ public class TextGameMainActivity extends AppCompatActivity
         }
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        if (mReceiver == null) {
+            mReceiver = new LandingTextReceiver();
+            registerReceiver(mReceiver, new IntentFilter(Telephony.Sms.Intents.SMS_RECEIVED_ACTION));
+        }
+
+        if (mReceiver != null) {
+            unregisterReceiver(mReceiver);
+            mReceiver = null;
+        }
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+
+        if (mReceiver != null) {
+            unregisterReceiver(mReceiver);
+            mReceiver = null;
+        }
+    }
 
     @Override
     public void onConnected(Bundle bundle) {
@@ -150,6 +211,7 @@ public class TextGameMainActivity extends AppCompatActivity
             LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
         }
     }
+
 
     @Override
     public void onMapReady(GoogleMap googleMap) {
@@ -198,7 +260,7 @@ public class TextGameMainActivity extends AppCompatActivity
         for(int i = 0; i < 2; i++){
             playerMarkers[i] = googleMap.addMarker(new MarkerOptions()
                             .position(new LatLng(43.6277, -79.3948)) // temp locations
-                            .icon(getMarkerIcon("#1976D2"))
+                            .icon(getMarkerIcon("#1565C0"))
                     .title("{name}")
                     );
         };
@@ -285,9 +347,6 @@ public class TextGameMainActivity extends AppCompatActivity
             if (ActivityCompat.shouldShowRequestPermissionRationale(this,
                     Manifest.permission.ACCESS_FINE_LOCATION)) {
 
-                // Show an explanation to the user *asynchronously* -- don't block
-                // this thread waiting for the user's response! After the user
-                // sees the explanation, try again to request the permission.
                 new AlertDialog.Builder(this)
                         .setTitle("Location Permission Needed")
                         .setMessage("This app needs the Location permission, please accept to use location functionality")
@@ -320,6 +379,10 @@ public class TextGameMainActivity extends AppCompatActivity
         if (requestCode == PERMISSIONS_REQUEST_READ_CONTACTS) {
             if (grantResults[0] != PackageManager.PERMISSION_GRANTED) {
                 Toast.makeText(this, "Until you grant the permission, we can't get your friends' names", Toast.LENGTH_SHORT).show();
+            }
+        } else if (requestCode == PERMISSIONS_REQUEST_SEND_SMS){
+            if (grantResults[0] != PackageManager.PERMISSION_GRANTED) {
+                Toast.makeText(this, "Until you grant the permission, the game can't be played", Toast.LENGTH_SHORT).show();
             }
         } else if (requestCode == PERMISSIONS_REQUEST_LOCATION){
             if (grantResults.length > 0
@@ -360,4 +423,74 @@ public class TextGameMainActivity extends AppCompatActivity
         return BitmapDescriptorFactory.defaultMarker(hsv[0]);
     }
 
+    protected void eventHandler(JSONObject event) {
+        // process event
+    }
+
+    public class LandingTextReceiver extends BroadcastReceiver {
+        private PendingResult mPendingResult;
+        @Override
+        public void onReceive(final Context context, final Intent intent) {
+            mPendingResult = goAsync();
+            AsyncTask<Void,Void,List<JSONObject>> asyncHandler = new AsyncTask<Void, Void, List<JSONObject> >() {
+                @Override
+                protected List<JSONObject> doInBackground(Void... voids) {
+                    List<JSONObject> events = new ArrayList<JSONObject>();
+                    if (intent.getAction().equals(Telephony.Sms.Intents.SMS_RECEIVED_ACTION)) {
+                        SmsMessage[] messages = Telephony.Sms.Intents.getMessagesFromIntent(intent);
+
+                        for (int i = 0; i < messages.length; ++i) {
+                            if (TextGameMainActivity.this.mPlayerNumbers.contains(messages[i].getDisplayOriginatingAddress())
+                                    || true) {
+                                Boolean failed = false;
+                                Inflater decompresser = new Inflater();
+                                byte[] messageText = Base64.decode(messages[i].getMessageBody(),Base64.DEFAULT);
+                                decompresser.setInput(messageText,0,messageText.length);
+                                byte[] result = new byte[100];
+                                StringBuilder stringifiedJSON = new StringBuilder();
+                                while (!decompresser.finished()) {
+                                    try{
+                                        decompresser.inflate(result);
+                                    } catch(DataFormatException e) {
+                                        failed = true;
+                                        break;
+                                    }
+
+                                    stringifiedJSON.append(new String(result));
+                                }
+
+                                if (!failed) {
+                                    try {
+                                        JSONObject event = new JSONObject(stringifiedJSON.toString());
+                                        events.add(event);
+                                    } catch(JSONException e) {
+                                        Log.e("BROKEN_JSON",e.getMessage());
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    return events;
+                }
+
+                @Override
+                protected void onPostExecute(List<JSONObject> events) {
+                    if (events != null) {
+                        for (int i = 0; i < events.size(); ++i) {
+                            TextGameMainActivity.this.eventHandler(events.get(i));
+                        }
+                    }
+                    mPendingResult.finish();
+                }
+            };
+            asyncHandler.execute();
+
+        }
+    }
+
+
+    private void sendSMS(String phoneNumber, String message) {
+        SmsManager sms = SmsManager.getDefault();
+        sms.sendTextMessage(phoneNumber, null, message, null, null);
+    }
 }

@@ -25,7 +25,7 @@ import java.util.zip.Inflater;
 
 public class TextGameLandingActivity extends AppCompatActivity {
     private LandingTextReceiver mReceiver = null;
-    private List<String> mPlayerNumbers = null;
+    private ArrayList<String> mPlayerNumbers = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,7 +46,9 @@ public class TextGameLandingActivity extends AppCompatActivity {
         startButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                startActivity(new Intent(TextGameLandingActivity.this, TextGameMainActivity.class));
+                Intent intent = new Intent(TextGameLandingActivity.this, TextGameMainActivity.class);
+                intent.putStringArrayListExtra("PLAYER_NUMBERS", mPlayerNumbers);
+                startActivity(intent);
             }
         });
 
