@@ -1,3 +1,4 @@
+
 package com.gunshippenguin.textgame;
 
 import android.content.BroadcastReceiver;
@@ -40,6 +41,15 @@ public class TextGameLandingActivity extends AppCompatActivity {
         if (mPlayerNumbers == null) {
             mPlayerNumbers = new  ArrayList<String>();
         }
+
+        Button startButton = (Button)findViewById(R.id.startButton);
+        startButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(TextGameLandingActivity.this, TextGameMainActivity.class));
+            }
+        });
+
     }
 
     protected void eventHandler(JSONObject event) {
