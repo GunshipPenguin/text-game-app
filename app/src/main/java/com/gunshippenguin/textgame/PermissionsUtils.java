@@ -14,7 +14,7 @@ import android.widget.Toast;
 /**
  * Utility class for access to runtime permissions.
  */
-public abstract class MapPermissionsUtils {
+public abstract class PermissionsUtils {
 
     /**
      * Requests the fine location permission. If a rationale with an additional explanation should
@@ -24,7 +24,7 @@ public abstract class MapPermissionsUtils {
                                          String permission, boolean finishActivity) {
         if (ActivityCompat.shouldShowRequestPermissionRationale(activity, permission)) {
             // Display a dialog with rationale.
-            MapPermissionsUtils.RationaleDialog.newInstance(requestId, finishActivity)
+            PermissionsUtils.RationaleDialog.newInstance(requestId, finishActivity)
                     .show(activity.getSupportFragmentManager(), "dialog");
         } else {
             // Location permission has not been granted yet, request it.
