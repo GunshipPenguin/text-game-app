@@ -541,8 +541,4 @@ public class TextGameMainActivity extends AppCompatActivity
         return mPlayerNumbers;
     }
 
-    // getter and setter ui hooks
-    public List<String> getPlayerNumbers() {
-        return mPlayerNumbers;
-    }
 }
