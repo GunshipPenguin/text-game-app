@@ -197,7 +197,26 @@ public class TextGameMainActivity extends AppCompatActivity
         new CountDownTimer(900000, 1000) { // adjust the milli seconds here
 
             public void onTick(long millisUntilFinished) {
-
+                if (millisUntilFinished == 60000){
+                    GameInfoEvent timeRunningEvent = new GameInfoEvent("1", "Ten minutes left!");
+                    eventData.add((DisplayableInterface)timeRunningEvent);
+                    mAdapter.notifyItemInserted(0);
+                }
+                if (millisUntilFinished == 300000){
+                    GameInfoEvent timeRunningEvent = new GameInfoEvent("1", "Five minutes left!");
+                    eventData.add((DisplayableInterface)timeRunningEvent);
+                    mAdapter.notifyItemInserted(0);
+                }
+                if (millisUntilFinished == 180000){
+                    GameInfoEvent timeRunningEvent = new GameInfoEvent("1", "Three minutes left!");
+                    eventData.add((DisplayableInterface)timeRunningEvent);
+                    mAdapter.notifyItemInserted(0);
+                }
+                if (millisUntilFinished == 60000){
+                    GameInfoEvent timeRunningEvent = new GameInfoEvent("1", "Final minute!");
+                    eventData.add((DisplayableInterface)timeRunningEvent);
+                    mAdapter.notifyItemInserted(0);
+                }
                 countdown.setText("" + String.format(TIME_FORMAT,
                         TimeUnit.MILLISECONDS.toHours(millisUntilFinished),
                         TimeUnit.MILLISECONDS.toMinutes(millisUntilFinished) - TimeUnit.HOURS.toMinutes(
