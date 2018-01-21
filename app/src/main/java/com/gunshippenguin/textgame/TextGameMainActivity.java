@@ -24,6 +24,8 @@ import android.provider.Telephony;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.telephony.SmsManager;
 import android.telephony.SmsMessage;
 import android.util.Base64;
@@ -31,10 +33,8 @@ import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -97,6 +97,11 @@ public class TextGameMainActivity extends AppCompatActivity
     TextView countdown;
     EditText messageField;
 
+    private ArrayList<String> eventData;
+    private RecyclerView mRecyclerView;
+    private RecyclerView.Adapter mAdapter;
+    private LinearLayoutManager mLayoutManager;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -110,9 +115,26 @@ public class TextGameMainActivity extends AppCompatActivity
         mapFragment.getMapAsync(this);
 
         // List View
-        String[] myList = new String[] {getContactNameByNumber("6477799320"),"World","Foo","Bar"};
-        ListView lv = (ListView) this.findViewById(R.id.listView);
-        lv.setAdapter(new ArrayAdapter<String>(this,android.R.layout.simple_list_item_1,myList));
+        mRecyclerView = (RecyclerView) findViewById(R.id.listView);
+        mRecyclerView.setHasFixedSize(true);
+
+        // use a linear layout manager
+        mLayoutManager = new LinearLayoutManager(this);
+        mRecyclerView.setLayoutManager(mLayoutManager);
+        mLayoutManager.setReverseLayout(true);
+
+        // specify an adapter (see also next example)
+        eventData = new ArrayList<String>();
+
+        //test
+        eventData.add(0, "{\"event_type\": \"game_lobby_started\"}");
+        eventData.add(0, "{\"event_type\": \"chat_message\",\"message\": \"This is a message\"}");
+        eventData.add(0, "{\"timestamp\": 1516425738,\"event_type\": \"start_capture\",\"capture_point\": 0}");
+        eventData.add(0, "{\"timestamp\": 1516425738,\"event_type\": \"left_capture_point\",\"capture_point\": 0}");
+        eventData.add(0, "{\"timestamp\": 1516425738,\"event_type\": \"defeat_enemy\",\"capture_point\": 0}");
+
+        mAdapter = new StreamAdapter(getApplicationContext(), eventData);
+        mRecyclerView.setAdapter(mAdapter);
 
         // Message actionSend
         final Button sendMessageButton = (Button)findViewById(R.id.sendMessage);
@@ -121,9 +143,11 @@ public class TextGameMainActivity extends AppCompatActivity
             public void onClick(View v) {
                 // Send the message
                 String message = messageField.getText().toString();
+                eventData.add(0, "{\"event_type\": \"own_message\",\"message\":\"" + message + "\"}");
+                mAdapter.notifyItemInserted(0);
                 if (message.length() > 0){
                     // Replace with iteration of users
-                    sendChatMessage("6478353527", message);
+                    sendChatMessage("6477799320", message);
                     InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
                     imm.hideSoftInputFromWindow(sendMessageButton.getWindowToken(), 0); // close keyboard
                     messageField.setText(""); // clear
@@ -457,6 +481,8 @@ public class TextGameMainActivity extends AppCompatActivity
                                     }
 
                                     stringifiedJSON.append(new String(result));
+                                    eventData.add(0, new String(result));
+                                    mAdapter.notifyItemInserted(0);
                                 }
 
                                 if (!failed) {
