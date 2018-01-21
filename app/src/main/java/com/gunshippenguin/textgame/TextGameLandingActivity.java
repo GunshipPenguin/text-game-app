@@ -1,8 +1,6 @@
 
 package com.gunshippenguin.textgame;
 
-import android.*;
-import android.Manifest;
 import android.content.BroadcastReceiver;
 import android.content.ContentResolver;
 import android.content.Context;
@@ -16,7 +14,6 @@ import android.os.Bundle;
 import android.provider.BaseColumns;
 import android.provider.ContactsContract;
 import android.provider.Telephony;
-import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.telephony.SmsMessage;
 import android.util.Base64;
@@ -45,6 +42,7 @@ import java.util.zip.Inflater;
 
 public class TextGameLandingActivity extends AppCompatActivity {
     private static final int PERMISSIONS_REQUEST_READ_CONTACTS = 17;
+    private static final String HOST_NUMBER = "17782350067";
     private LandingTextReceiver mReceiver = null;
     private ArrayList<String> mPlayerNumbers = null;
     private Button mStartButton = null;
@@ -83,31 +81,6 @@ public class TextGameLandingActivity extends AppCompatActivity {
 
     public void onClickPause(View v) {
         handleSelfRegistration();
-    }
-
-    protected void eventHandler(Event event) {
-        // process event
-        try {
-            String eventType = event.getEvent().getString("event_type");
-
-            // Handle (server -> client) events
-            switch(eventType) {
-                case Event.GAME_LOBBY_STARTED:
-                    handleGameLobbyStarted(event);
-                    break;
-                case Event.NEW_REGISTRATION:
-                    handleNewRegistration(event);
-                    break;
-                case Event.GAME_STARTING:
-                    handleGameStarting(event);
-                    break;
-                default:
-                    break;
-
-            }
-        } catch(JSONException e) {
-            Log.e("BROKEN_EVENT",e.getMessage());
-        }
     }
 
     @Override
@@ -198,56 +171,45 @@ public class TextGameLandingActivity extends AppCompatActivity {
     }
 
     private void handleRequestOpenLobby() {
-        // request the server to open the lobby
-    }
+        try {
+            JSONObject requestObject = new JSONObject();
+            requestObject.put("event_type", "open_lobby");
+            Event openLobbyEvent = Event.fromJson("dummynumber",requestObject);
 
-    private void handleGameLobbyStarted(Event event) {
-        mLobbyLeader = true;
-        getStartButton(this).setText(R.string.start_game);
-        getStartButton(this).setEnabled(true);
-        getJoinButton(this).setEnabled(false);
+            //TODO: request the server to open the lobby
+        } catch(JSONException e) {
+            //it failed, who cares, certainly not the button you can tap again
+        } catch(InvalidEventException e) {
+            Log.e("INCORECT_OPEN_REQUEST",e.getMessage());
+        }
     }
 
     private void handleSelfRegistration() {
-        //send a request to the server to join a lobby
-    }
-
-    private void handleNewRegistration(Event event) {
         try {
-            JSONArray numbers = event.getEvent().getJSONArray("players_in_lobby");
+            JSONObject requestObject = new JSONObject();
+            requestObject.put("event_type", "register");
+            requestObject.put("host_number", HOST_NUMBER);
+            Event selfRegistrationEvent = Event.fromJson("dummynumber",requestObject);
 
-            for (int i = 0; i < numbers.length(); i++) {
-                String temp = numbers.getString(i);
-                if (!mPlayerNumbers.contains(temp)) {
-                    mPlayerNumbers.add(temp);
-                    mAdapter.add(getContactNameByNumber(temp));
-                }
-            }
-
-            if (!mLobbyLeader) {
-                getJoinButton(this).setEnabled(false);
-                getStartButton(this).setEnabled(false);
-            }
-
-        } catch(JSONException e) {
-            Log.e("REGISTRATION_BROKEN",e.getMessage());
+            //TODO: send a request to the server to join a lobby
+        } catch (JSONException e) {
+            // click the button again
+        } catch (InvalidEventException e2) {
+            Log.e("INCORRECT_REGISTRATION",e2.getMessage());
         }
     }
 
     private void handleRequestStartGame() {
-        //we are requesting the server to start the game
-    }
-
-    private void handleGameStarting(Event event) {
-        String stringifiedJSON = event.getEvent().toString();
-        Deflater compressor = new Deflater();
-        compressor.setInput(stringifiedJSON.getBytes());
-        byte[] result = new byte[300];
-        compressor.finish();
-        compressor.deflate(result);
-        String compressedJSON = Base64.encodeToString(result,Base64.DEFAULT);
-
-        // launch an intent
+        try{
+            JSONObject requestObject = new JSONObject();
+            requestObject.put("event_type","start_game");
+            Event startGameEvent = Event.fromJson("dummynumber", requestObject);
+            //TODO: we are requesting the server to start the game
+        } catch(JSONException e) {
+            // press button again
+        } catch(InvalidEventException e2) {
+            Log.e("INCORRECT_START",e2.getMessage());
+        }
     }
 
     public String getContactNameByNumber(String number) {
