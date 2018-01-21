@@ -20,7 +20,7 @@ import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
 
-import com.google.android.gms.games.Player;
+import com.gunshippenguin.textgame.events.Event;
 
 import org.json.JSONArray;
 import org.json.JSONException;
