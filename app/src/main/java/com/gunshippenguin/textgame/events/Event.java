@@ -1,8 +1,8 @@
 package com.gunshippenguin.textgame.events;
 
 import android.app.Activity;
-import android.telephony.SmsManager;
 import android.util.Base64;
+import android.util.Log;
 
 import com.gunshippenguin.textgame.CapturePoint;
 import com.gunshippenguin.textgame.EnemySpawn;
@@ -52,27 +52,28 @@ public abstract class Event {
             case "open_lobby": return new OpenLobbyEvent(phoneNumber);
             case "game_lobby_started": return new GameLobbyStartedEvent(phoneNumber);
             case "register": return new RegisterEvent(phoneNumber, eventJson.getString("host_number"));
-            case "new_registration": return new NewRegistrationEvent(phoneNumber, JsonUtils.parseStringArray(
+            case "new_registration": return new NewRegistrationEvent(phoneNumber, JsonUtils.jsonStringArrayToList(
                 eventJson.getJSONArray("players_in_lobby")));
             case "start_game": return new StartGameEvent(phoneNumber);
             case "game_starting":
                 Date timeStamp = new Date(eventJson.getLong("timestamp"));
-                List<String> playerNumbers = JsonUtils.parseStringArray(eventJson.getJSONArray("player_numbers"));
-                List<CapturePoint> capturePoints = JsonUtils.parseCapturePointArray(
+                Date gameEnd = new Date(eventJson.getLong("game_end"));
+                List<String> playerNumbers = JsonUtils.jsonStringArrayToList(eventJson.getJSONArray("player_numbers"));
+                List<CapturePoint> capturePoints = JsonUtils.jsonCapturePointsArrayToList(
                         eventJson.getJSONArray("capture_points"));
-                List <EnemySpawn> enemySpawns = JsonUtils.parseEnemySpawnArray(
+                List <EnemySpawn> enemySpawns = JsonUtils.jsonEnemySpawnArrayToList(
                         eventJson.getJSONArray("enemy_spawns"));
-                return new GameStartingEvent(phoneNumber, timeStamp, playerNumbers, capturePoints, enemySpawns);
+                return new GameStartingEvent(phoneNumber, timeStamp, playerNumbers, capturePoints, enemySpawns, gameEnd);
             default:
                 throw new InvalidEventException();
         }
     }
 
     public abstract void handleEvent(Activity activity);
-    protected abstract JSONObject getJson();
+    public abstract JSONObject getJson() throws JSONException;
 
     // Compresses and encodes this event into a string
-    private String compressAndEncode() {
+    private String compressAndEncode() throws JSONException {
         Deflater deflater = new Deflater();
         deflater.setInput(getJson().toString().getBytes());
         deflater.finish();
@@ -84,11 +85,22 @@ public abstract class Event {
     }
 
     public void sendToNumber(String number) {
-        SmsUtils.sendMessage(number, compressAndEncode());
+        try {
+            SmsUtils.sendMessage(number, compressAndEncode());
+        } catch (JSONException e) {
+            Log.e("JSON", "JSON exception when sending to numbers");
+        }
     }
 
     public void sendToNumbers(List<String> numbers) {
-        String data = compressAndEncode();
+        String data;
+        try {
+            data = compressAndEncode();
+        } catch (JSONException e) {
+            Log.e("JSON", "JSON exception when sending to numbers");
+            return;
+        }
+
         for (String number : numbers) {
             SmsUtils.sendMessage(number, data);
         }

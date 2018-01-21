@@ -13,4 +13,12 @@ public class EnemySpawn {
         mTime = time;
         mPointNumber = pointNumber;
     }
+
+    public Date getTime() {
+        return mTime;
+    }
+
+    public int getPointNumber() {
+        return mPointNumber;
+    }
 }

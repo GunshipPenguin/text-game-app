@@ -16,11 +16,11 @@ public class CapturePoint {
         mNumber = number;
     }
 
-    LatLng getLatLng() {
+    public LatLng getLatLng() {
         return new LatLng(mLatitude, mLongitude);
     }
 
-    int getNumber() {
+    public int getNumber() {
         return mNumber;
     }
 }
