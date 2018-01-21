@@ -52,6 +52,7 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MapStyleOptions;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.gunshippenguin.textgame.events.CaptureTreasureEvent;
 import com.gunshippenguin.textgame.events.ChatMessageEvent;
 import com.gunshippenguin.textgame.events.DisplayableInterface;
 import com.gunshippenguin.textgame.events.Event;
@@ -64,7 +65,9 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
@@ -80,7 +83,7 @@ public class TextGameMainActivity extends AppCompatActivity
         GoogleApiClient.OnConnectionFailedListener,
         LocationListener {
 
-    private static final int CAPTURE_POINT_DISTANCE_THRESHOLD_M = 12;
+    private static final int TREASURE_DISTANCE_THRESHOLD_M = 12;
 
     private static final int PERMISSIONS_REQUEST_READ_CONTACTS = 1;
     private static final int PERMISSIONS_REQUEST_LOCATION = 2;
@@ -93,11 +96,6 @@ public class TextGameMainActivity extends AppCompatActivity
 
     private List<String> mPlayerNumbers;
     private List<TreasureSpawn> mTreasureSpawns;
-    private Date mStartTime;
-    private Date mEndTime;
-
-    // -1 indicates no capture point
-    private int mCurrentCapturePoint = -1;
 
     GoogleMap map;
     SupportMapFragment mapFrag;
@@ -119,8 +117,10 @@ public class TextGameMainActivity extends AppCompatActivity
 
     Timer backgroundEventsTimer;
     TimerTask broadcastPositionTask;
-    TimerTask checkEnterLeaveCapturePointTask;
-    TimerTask checkChangeCapturePointTask;
+    TimerTask checkCaptureTreasureTask;
+
+    int ourScore = 0;
+    Map<String, Integer> playerScores = new HashMap<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -130,8 +130,10 @@ public class TextGameMainActivity extends AppCompatActivity
         Bundle gameData = getIntent().getBundleExtra(GameStartingEvent.BUNDLE_KEY);
 
         mPlayerNumbers = (ArrayList<String>) gameData.getSerializable(GameStartingEvent.PLAYER_NUMBERS_KEY);
-        mStartTime = (Date) gameData.getSerializable(GameStartingEvent.TIME_START_KEY);
-        mEndTime = (Date) gameData.getSerializable(GameStartingEvent.TIME_END_KEY);
+        for (String number : mPlayerNumbers) {
+            playerScores.put(number, 0);
+        }
+
         mTreasureSpawns = (ArrayList<TreasureSpawn>) gameData.getSerializable(GameStartingEvent.TREASURE_SPAWNS_KEY);
 
         // Map Fragment
@@ -220,23 +222,15 @@ public class TextGameMainActivity extends AppCompatActivity
                 broadcastPosition();
             }
         };
-        checkEnterLeaveCapturePointTask = new TimerTask() {
+        checkCaptureTreasureTask = new TimerTask() {
             @Override
             public void run() {
-                checkEnterLeaveCapturePoint();
-            }
-        };
-
-        checkChangeCapturePointTask = new TimerTask() {
-            @Override
-            public void run() {
-                checkChangeCapturePoint();
+                checkCaptureTreasure();
             }
         };
 
         backgroundEventsTimer.scheduleAtFixedRate(broadcastPositionTask, 60000, 60000);
-        backgroundEventsTimer.scheduleAtFixedRate(checkEnterLeaveCapturePointTask, 2000, 2000);
-        backgroundEventsTimer.scheduleAtFixedRate(checkChangeCapturePointTask, 2000, 2000);
+        backgroundEventsTimer.scheduleAtFixedRate(checkCaptureTreasureTask, 2000, 2000);
     }
 
     @Override
@@ -399,59 +393,33 @@ public class TextGameMainActivity extends AppCompatActivity
         return name;
     }
 
-    /*private CapturePoint getCapturePointByNumber(int number) {
-        for (CapturePoint capturePoint : mCapturePoints) {
-            if (capturePoint.getNumber() == number) {
-                return capturePoint;
-            }
-        }
-        throw new RuntimeException("Capture point with id " + Integer.toString(number) + " not found");
-    }*/
-
     private void broadcastPosition() {
         Event positionUpdateEvent = new PositionUpdateEvent("111", new Date(),
                 mLastLocation.getLatitude(), mLastLocation.getLongitude());
         positionUpdateEvent.sendToNumbers(getPlayerNumbers(), this);
     }
 
-    /*private void leaveCapturePoint() {
-        Event leaveCapturePointEvent = new LeftCapturePointEvent("111", new Date(),
-                mCurrentCapturePoint);
-        leaveCapturePointEvent.sendToNumbers(getPlayerNumbers(), this);
-    }*/
-
-    /*private void enterCapturePoint(int number) {
-        Event enterCapturePointEvent = new StartCaptureEvent("111", new Date(), number);
-        mCurrentCapturePoint = number;
-        enterCapturePointEvent.sendToNumbers(getPlayerNumbers(), this);
-    }*/
-
-    // TODO: Retrofit to check approaching spawned treasure
-    private void checkEnterLeaveCapturePoint() {
-        if (mCurrentCapturePoint != -1) { // Already on capture point
-            //CapturePoint cp = getCapturePointByNumber(mCurrentCapturePoint);
-            Location cpLocation = new Location("");
-           // cpLocation.setLatitude(cp.getLatLng().latitude);
-            //cpLocation.setLongitude(cp.getLatLng().longitude);
-
-            if (mLastLocation.distanceTo(cpLocation) > CAPTURE_POINT_DISTANCE_THRESHOLD_M) {
-                //leaveCapturePoint();
-            }
-        } else { // Not already on a capture point
-            /*for (CapturePoint cp : mCapturePoints) {
-                Location cpLocation  = new Location("");
-                cpLocation.setLatitude(cp.getLatLng().latitude);
-                cpLocation.setLongitude(cp.getLatLng().longitude);
-
-                if (mLastLocation.distanceTo(cpLocation) < CAPTURE_POINT_DISTANCE_THRESHOLD_M) {
-                    enterCapturePoint(cp.getNumber());
-                }
-            }*/
-        }
+    private void broadcastTreasureCaptured(int number) {
+        Event captureTreasureEvent = new CaptureTreasureEvent("111", new Date(), number);
+        captureTreasureEvent.sendToNumbers(getPlayerNumbers(), this);
     }
 
-    private void checkChangeCapturePoint() {
+    private void checkCaptureTreasure() {
+        Date currTime = new Date();
 
+        for (int i=0;i<mTreasureSpawns.size();i++) {
+            TreasureSpawn ts = mTreasureSpawns.get(i);
+
+            if (!ts.isTaken() && (ts.getTime().before(currTime))) {
+                float distances[] = new float[3];
+                Location.distanceBetween(mLastLocation.getLatitude(), mLastLocation.getLongitude(), ts.getLat(), ts.getLong(), distances);
+                if (distances[0] < TREASURE_DISTANCE_THRESHOLD_M) {
+                    ts.setTaken();
+                    broadcastTreasureCaptured(i);
+                    break;
+                }
+            }
+        }
     }
 
     public void updateTeamScore(String toThis) {
