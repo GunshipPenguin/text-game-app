@@ -72,13 +72,6 @@ public class TextGameLandingActivity extends AppCompatActivity {
         getLobbyList(this).setAdapter(mAdapter);
     }
 
-    @Override
-    protected void onStart() {
-        super.onStart();
-
-        mAdapter.add(getContactNameByNumber("2509278604"));
-    }
-
     public void onClickStart(View v) {
         if (mLobbyLeader) {
             handleRequestStartGame();
