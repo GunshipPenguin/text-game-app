@@ -54,11 +54,13 @@ import com.google.android.gms.maps.model.MapStyleOptions;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.gunshippenguin.textgame.events.DisplayableInterface;
+import com.gunshippenguin.textgame.events.GameStartingEvent;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.zip.DataFormatException;
@@ -82,7 +84,11 @@ public class TextGameMainActivity extends AppCompatActivity
 
     private LandingTextReceiver mReceiver = null;
 
-    ArrayList<String> mPlayerNumbers;
+    private List<String> mPlayerNumbers;
+    private List<CapturePoint> mCapturePoints;
+    private List<EnemySpawn> mEnemySpawns;
+    private Date mStartTime;
+    private Date mEndTime;
 
 
     GoogleMap map;
@@ -103,12 +109,20 @@ public class TextGameMainActivity extends AppCompatActivity
     private RecyclerView.Adapter mAdapter;
     private LinearLayoutManager mLayoutManager;
 
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_text_game_main);
 
-        mPlayerNumbers = getIntent().getStringArrayListExtra("PLAYER_NUMBERS");
+        Bundle gameData = getIntent().getBundleExtra(GameStartingEvent.BUNDLE_KEY);
+
+        mPlayerNumbers = (ArrayList<String>) gameData.getSerializable(GameStartingEvent.PLAYER_NUMBERS_KEY);
+        mStartTime = (Date) gameData.getSerializable(GameStartingEvent.TIME_START_KEY);
+        mEndTime = (Date) gameData.getSerializable(GameStartingEvent.TIME_END_KEY);
+        mCapturePoints = (ArrayList<CapturePoint>) gameData.getSerializable(GameStartingEvent.CAPTURE_POINTS_KEY);
+        mEnemySpawns = (ArrayList<EnemySpawn>) gameData.getSerializable(GameStartingEvent.ENEMY_SPAWNS_KEY);
 
         // Map Fragment
         SupportMapFragment mapFragment =
@@ -524,5 +538,10 @@ public class TextGameMainActivity extends AppCompatActivity
 
         } catch (Exception e){};
 
+    }
+
+    // getter and setter ui hooks
+    public List<String> getPlayerNumbers() {
+        return mPlayerNumbers;
     }
 }
