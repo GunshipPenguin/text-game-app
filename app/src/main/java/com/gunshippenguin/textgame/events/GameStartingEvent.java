@@ -19,11 +19,12 @@ import org.json.JSONObject;
 
 public class GameStartingEvent extends Event {
 
-    private static final String TIMESTAMP_KEY = "textgame.events.timestampkey";
-    private static final String PLAYER_NUMBERS_KEY = "textgame.events.playernumberskey";
-    private static final String CAPTURE_POINTS_KEY = "textgame.events.capturepointskey";
-    private static final String ENEMY_SPAWNS_KEY = "textgame.events.enemyspawnskey";
-    private static final String BUNDLE_KEY = "textgame.gamestart.bundle";
+    public static final String TIME_START_KEY = "textgame.events.timestartkey";
+    public static final String TIME_END_KEY = "textgame.events.timeendkey";
+    public static final String PLAYER_NUMBERS_KEY = "textgame.events.playernumberskey";
+    public static final String CAPTURE_POINTS_KEY = "textgame.events.capturepointskey";
+    public static final String ENEMY_SPAWNS_KEY = "textgame.events.enemyspawnskey";
+    public static final String BUNDLE_KEY = "textgame.gamestart.bundle";
 
     Date mTimeStamp;
     Date mGameEnd;
@@ -48,7 +49,8 @@ public class GameStartingEvent extends Event {
         Intent intent = new Intent(activity, TextGameMainActivity.class);
         Bundle gameDataBundle = new Bundle();
 
-        gameDataBundle.putSerializable(TIMESTAMP_KEY,mTimeStamp);
+        gameDataBundle.putSerializable(TIME_START_KEY,mTimeStamp);
+        gameDataBundle.putSerializable(TIME_END_KEY,mGameEnd);
         gameDataBundle.putSerializable(PLAYER_NUMBERS_KEY,(ArrayList<String>)mPlayerNumbers);
         gameDataBundle.putSerializable(CAPTURE_POINTS_KEY,(ArrayList<CapturePoint>)mCapturePoints);
         gameDataBundle.putSerializable(ENEMY_SPAWNS_KEY,(ArrayList<EnemySpawn>)mEnemySpawns);
