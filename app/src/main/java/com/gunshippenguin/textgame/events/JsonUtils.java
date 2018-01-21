@@ -1,6 +1,7 @@
 package com.gunshippenguin.textgame.events;
 
-import com.gunshippenguin.textgame.CapturePoint;
+
+import com.gunshippenguin.textgame.TreasureSpawn;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -32,11 +33,38 @@ public class JsonUtils {
         return list;
     }
 
+
+    public static List<TreasureSpawn> jsonTreasureSpawnArrayToList(JSONArray array) throws JSONException {
+        List<TreasureSpawn> list = new ArrayList<>();
+
+        for(int i=0;i<array.length();i++) {
+            JSONObject pointJson = array.getJSONObject(i);
+            list.add(new TreasureSpawn(new Date(pointJson.getLong("timestamp")),
+                    pointJson.getDouble("latitude"),pointJson.getDouble("longitude")));
+        }
+        return list;
+    }
+
     public static JSONArray stringListToJsonArray(List<String> list) throws JSONException {
         JSONArray array = new JSONArray();
 
         for (String string : list) {
             array.put(string);
+        }
+
+        return array;
+    }
+
+
+    public static JSONArray treasureSpawnListToJsonArray(List<TreasureSpawn> list) throws JSONException {
+        JSONArray array = new JSONArray();
+
+        for (TreasureSpawn treasureSpawn : list) {
+            JSONObject esJson = new JSONObject();
+            esJson.put("timestamps", treasureSpawn.getTime().getTime());
+            esJson.put("latitude", treasureSpawn.getLat());
+            esJson.put("longitude",treasureSpawn.getLong());
+            array.put(esJson);
         }
 
         return array;

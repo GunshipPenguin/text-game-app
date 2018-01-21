@@ -5,8 +5,8 @@ import android.content.Context;
 import android.util.Base64;
 import android.util.Log;
 
-import com.gunshippenguin.textgame.CapturePoint;
 import com.gunshippenguin.textgame.SmsUtils;
+import com.gunshippenguin.textgame.TreasureSpawn;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -64,17 +64,13 @@ public abstract class Event {
             }
             case "start_game": { return new StartGameEvent(phoneNumber); }
             case "game_starting": {
-                /*
+
                 Date timestamp = new Date(eventJson.getLong("timestamp"));
                 Date gameEnd = new Date(eventJson.getLong("game_end"));
                 List<String> playerNumbers = JsonUtils.jsonStringArrayToList(eventJson.getJSONArray("player_numbers"));
-                List<CapturePoint> capturePoints = JsonUtils.jsonCapturePointsArrayToList(
-                        eventJson.getJSONArray("capture_points"));
-                List<Treasure> enemySpawns = JsonUtils.jsonEnemySpawnArrayToList(
+                List<TreasureSpawn> treasureSpawns = JsonUtils.jsonTreasureSpawnArrayToList(
                         eventJson.getJSONArray("enemy_spawns"));
-                return new GameStartingEvent(phoneNumber, timestamp, playerNumbers, capturePoints, enemySpawns, gameEnd);
-                */
-                return null;
+                return new GameStartingEvent(phoneNumber, timestamp, playerNumbers, treasureSpawns, gameEnd);
             }
 
             // Game events

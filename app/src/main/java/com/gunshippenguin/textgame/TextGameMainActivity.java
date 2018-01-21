@@ -57,9 +57,7 @@ import com.gunshippenguin.textgame.events.DisplayableInterface;
 import com.gunshippenguin.textgame.events.Event;
 import com.gunshippenguin.textgame.events.GameInfoEvent;
 import com.gunshippenguin.textgame.events.GameStartingEvent;
-import com.gunshippenguin.textgame.events.LeftCapturePointEvent;
 import com.gunshippenguin.textgame.events.PositionUpdateEvent;
-import com.gunshippenguin.textgame.events.StartCaptureEvent;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -94,8 +92,7 @@ public class TextGameMainActivity extends AppCompatActivity
     private LandingTextReceiver mReceiver = null;
 
     private List<String> mPlayerNumbers;
-    private List<CapturePoint> mCapturePoints;
-    private List<EnemySpawn> mEnemySpawns;
+    private List<TreasureSpawn> mTreasureSpawns;
     private Date mStartTime;
     private Date mEndTime;
 
@@ -135,8 +132,7 @@ public class TextGameMainActivity extends AppCompatActivity
         mPlayerNumbers = (ArrayList<String>) gameData.getSerializable(GameStartingEvent.PLAYER_NUMBERS_KEY);
         mStartTime = (Date) gameData.getSerializable(GameStartingEvent.TIME_START_KEY);
         mEndTime = (Date) gameData.getSerializable(GameStartingEvent.TIME_END_KEY);
-        mCapturePoints = (ArrayList<CapturePoint>) gameData.getSerializable(GameStartingEvent.CAPTURE_POINTS_KEY);
-        mEnemySpawns = (ArrayList<EnemySpawn>) gameData.getSerializable(GameStartingEvent.ENEMY_SPAWNS_KEY);
+        mTreasureSpawns = (ArrayList<TreasureSpawn>) gameData.getSerializable(GameStartingEvent.TREASURE_SPAWNS_KEY);
 
         // Map Fragment
         SupportMapFragment mapFragment =
@@ -403,14 +399,14 @@ public class TextGameMainActivity extends AppCompatActivity
         return name;
     }
 
-    private CapturePoint getCapturePointByNumber(int number) {
+    /*private CapturePoint getCapturePointByNumber(int number) {
         for (CapturePoint capturePoint : mCapturePoints) {
             if (capturePoint.getNumber() == number) {
                 return capturePoint;
             }
         }
         throw new RuntimeException("Capture point with id " + Integer.toString(number) + " not found");
-    }
+    }*/
 
     private void broadcastPosition() {
         Event positionUpdateEvent = new PositionUpdateEvent("111", new Date(),
@@ -418,30 +414,31 @@ public class TextGameMainActivity extends AppCompatActivity
         positionUpdateEvent.sendToNumbers(getPlayerNumbers(), this);
     }
 
-    private void leaveCapturePoint() {
+    /*private void leaveCapturePoint() {
         Event leaveCapturePointEvent = new LeftCapturePointEvent("111", new Date(),
                 mCurrentCapturePoint);
         leaveCapturePointEvent.sendToNumbers(getPlayerNumbers(), this);
-    }
+    }*/
 
-    private void enterCapturePoint(int number) {
+    /*private void enterCapturePoint(int number) {
         Event enterCapturePointEvent = new StartCaptureEvent("111", new Date(), number);
         mCurrentCapturePoint = number;
         enterCapturePointEvent.sendToNumbers(getPlayerNumbers(), this);
-    }
+    }*/
 
+    // TODO: Retrofit to check approaching spawned treasure
     private void checkEnterLeaveCapturePoint() {
         if (mCurrentCapturePoint != -1) { // Already on capture point
-            CapturePoint cp = getCapturePointByNumber(mCurrentCapturePoint);
+            //CapturePoint cp = getCapturePointByNumber(mCurrentCapturePoint);
             Location cpLocation = new Location("");
-            cpLocation.setLatitude(cp.getLatLng().latitude);
-            cpLocation.setLongitude(cp.getLatLng().longitude);
+           // cpLocation.setLatitude(cp.getLatLng().latitude);
+            //cpLocation.setLongitude(cp.getLatLng().longitude);
 
             if (mLastLocation.distanceTo(cpLocation) > CAPTURE_POINT_DISTANCE_THRESHOLD_M) {
-                leaveCapturePoint();
+                //leaveCapturePoint();
             }
         } else { // Not already on a capture point
-            for (CapturePoint cp : mCapturePoints) {
+            /*for (CapturePoint cp : mCapturePoints) {
                 Location cpLocation  = new Location("");
                 cpLocation.setLatitude(cp.getLatLng().latitude);
                 cpLocation.setLongitude(cp.getLatLng().longitude);
@@ -449,7 +446,7 @@ public class TextGameMainActivity extends AppCompatActivity
                 if (mLastLocation.distanceTo(cpLocation) < CAPTURE_POINT_DISTANCE_THRESHOLD_M) {
                     enterCapturePoint(cp.getNumber());
                 }
-            }
+            }*/
         }
     }
 
