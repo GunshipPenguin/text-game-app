@@ -1,19 +1,30 @@
 package com.gunshippenguin.textgame.events;
 
 import android.app.Activity;
+import android.content.Intent;
+import android.os.Bundle;
 
 import com.google.android.gms.maps.model.LatLng;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
 import com.gunshippenguin.textgame.CapturePoint;
 import com.gunshippenguin.textgame.EnemySpawn;
+import com.gunshippenguin.textgame.TextGameMainActivity;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
 public class GameStartingEvent extends Event {
+
+    private static final String TIMESTAMP_KEY = "textgame.events.timestampkey";
+    private static final String PLAYER_NUMBERS_KEY = "textgame.events.playernumberskey";
+    private static final String CAPTURE_POINTS_KEY = "textgame.events.capturepointskey";
+    private static final String ENEMY_SPAWNS_KEY = "textgame.events.enemyspawnskey";
+    private static final String BUNDLE_KEY = "textgame.gamestart.bundle";
+
     Date mTimeStamp;
     Date mGameEnd;
     List<String> mPlayerNumbers;
@@ -34,7 +45,17 @@ public class GameStartingEvent extends Event {
 
     @Override
     public void handleEvent(Activity activity) {
+        Intent intent = new Intent(activity, TextGameMainActivity.class);
+        Bundle gameDataBundle = new Bundle();
 
+        gameDataBundle.putSerializable(TIMESTAMP_KEY,mTimeStamp);
+        gameDataBundle.putSerializable(PLAYER_NUMBERS_KEY,(ArrayList<String>)mPlayerNumbers);
+        gameDataBundle.putSerializable(CAPTURE_POINTS_KEY,(ArrayList<CapturePoint>)mCapturePoints);
+        gameDataBundle.putSerializable(ENEMY_SPAWNS_KEY,(ArrayList<EnemySpawn>)mEnemySpawns);
+
+        intent.putExtra(BUNDLE_KEY,gameDataBundle);
+
+        activity.startActivity(intent);
     }
     @Override
     public JSONObject getJson() throws JSONException {

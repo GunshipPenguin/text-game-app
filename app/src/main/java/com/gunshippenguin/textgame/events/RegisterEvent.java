@@ -19,7 +19,7 @@ public class RegisterEvent extends Event {
 
     @Override
     public void handleEvent(Activity activity) {
-
+        //TODO: send
     }
 
     private String getHostNumber() {

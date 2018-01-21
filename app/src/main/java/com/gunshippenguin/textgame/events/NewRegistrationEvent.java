@@ -4,6 +4,7 @@ import android.app.Activity;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+import com.gunshippenguin.textgame.TextGameLandingActivity;
 
 import java.util.List;
 
@@ -24,7 +25,17 @@ public class NewRegistrationEvent extends Event {
 
     @Override
     public void handleEvent(Activity activity) {
+        TextGameLandingActivity uiHook = (TextGameLandingActivity) activity;
+        uiHook.cleanStatefulTransitions(mPlayersInLobby.size());
 
+        for (int i = 0; i < mPlayersInLobby.size(); i++) {
+            uiHook.addPlayer(mPlayersInLobby.get(i));
+        }
+
+        if (!uiHook.lobbyLeader()) {
+            uiHook.getStartButton(uiHook).setEnabled(false);
+            uiHook.getJoinButton(uiHook).setEnabled(false);
+        }
     }
 
     @Override
