@@ -175,6 +175,7 @@ public class TextGameMainActivity extends AppCompatActivity
                     //create message event
                     ChatMessageEvent sentSMS = new ChatMessageEvent("0", message);
                     eventData.add((DisplayableInterface)sentSMS);
+                    sentSMS.sendToNumbers(mPlayerNumbers, getApplicationContext());
                     mAdapter.notifyItemInserted(0);
                     sentSMS.sendToNumbers(mPlayerNumbers, getApplicationContext());
                     InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
@@ -231,7 +232,7 @@ public class TextGameMainActivity extends AppCompatActivity
             }
         };
 
-        backgroundEventsTimer.scheduleAtFixedRate(broadcastPositionTask, 60000, 60000);
+        backgroundEventsTimer.scheduleAtFixedRate(broadcastPositionTask, 5000, 60000);
         backgroundEventsTimer.scheduleAtFixedRate(checkCaptureTreasureTask, 2000, 2000);
     }
 
@@ -259,10 +260,6 @@ public class TextGameMainActivity extends AppCompatActivity
             registerReceiver(mReceiver, new IntentFilter(Telephony.Sms.Intents.SMS_RECEIVED_ACTION));
         }
 
-        if (mReceiver != null) {
-            unregisterReceiver(mReceiver);
-            mReceiver = null;
-        }
     }
 
     @Override
