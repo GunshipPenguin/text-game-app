@@ -132,12 +132,12 @@ public class TextGameMainActivity extends AppCompatActivity
 
         Bundle gameData = getIntent().getBundleExtra(GameStartingEvent.BUNDLE_KEY);
 
-//        mPlayerNumbers = (ArrayList<String>) gameData.getSerializable(GameStartingEvent.PLAYER_NUMBERS_KEY);
-//        for (String number : mPlayerNumbers) {
-//            playerScores.put(number, 0);
-//        }
-//
-//        mTreasureSpawns = (ArrayList<TreasureSpawn>) gameData.getSerializable(GameStartingEvent.TREASURE_SPAWNS_KEY);
+       mPlayerNumbers = (ArrayList<String>) gameData.getSerializable(GameStartingEvent.PLAYER_NUMBERS_KEY);
+       for (String number : mPlayerNumbers) {
+           playerScores.put(number, 0);
+       }
+
+       mTreasureSpawns = (ArrayList<TreasureSpawn>) gameData.getSerializable(GameStartingEvent.TREASURE_SPAWNS_KEY);
 
         // Map Fragment
         SupportMapFragment mapFragment =
