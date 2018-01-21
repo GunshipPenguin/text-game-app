@@ -606,7 +606,7 @@ public class TextGameMainActivity extends AppCompatActivity
                 protected void onPostExecute(List<Event> events) {
                     if (events != null) {
                         for (int i = 0; i < events.size(); ++i) {
-                            events.get(i).handleEvent(TextGameMainActivity.this);
+xz                             events.get(i).handleEvent(TextGameMainActivity.this);
                         }
                     }
                     mPendingResult.finish();
