@@ -31,6 +31,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.gunshippenguin.textgame.events.Event;
+import com.gunshippenguin.textgame.events.InvalidEventException;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -149,25 +150,51 @@ public class TextGameLandingActivity extends AppCompatActivity {
         }
     }
 
-    private Button getStartButton(AppCompatActivity activity) {
+    public Button getStartButton(AppCompatActivity activity) {
         if (mStartButton == null) {
             mStartButton = activity.findViewById(R.id.startButton);
         }
         return mStartButton;
     }
 
-    private Button getJoinButton(AppCompatActivity activity) {
+    public Button getJoinButton(AppCompatActivity activity) {
         if (mJoinButton == null) {
             mJoinButton = activity.findViewById(R.id.joinButton);
         }
         return mJoinButton;
     }
 
-    private ListView getLobbyList(AppCompatActivity activity) {
+    public ListView getLobbyList(AppCompatActivity activity) {
         if (mLobbyListings == null) {
             mLobbyListings = activity.findViewById(R.id.playerList);
         }
         return mLobbyListings;
+    }
+
+    public Boolean lobbyLeader() {
+        return mLobbyLeader;
+    }
+
+    public void setLobbyLeader(Boolean isLeader) {
+        mLobbyLeader = isLeader;
+    }
+
+    public Boolean cleanStatefulTransitions(int newNumPlayers) {
+        // Something went wrong, either lost something in
+        // as state transition or skipped adding a player
+        if (newNumPlayers > (mPlayerNumbers.size() + 1)) {
+            mAdapter.clear();
+            mPlayerNumbers.clear();
+            return true;
+        }
+        return false;
+    }
+
+    public void addPlayer(String phoneNumber) {
+        if (!mPlayerNumbers.contains(phoneNumber)) {
+            mPlayerNumbers.add(phoneNumber);
+            mAdapter.add(getContactNameByNumber(phoneNumber));
+        }
     }
 
     private void handleRequestOpenLobby() {
@@ -304,9 +331,11 @@ public class TextGameLandingActivity extends AppCompatActivity {
                             if (!failed) {
                                 try {
                                     JSONObject event = new JSONObject(stringifiedJSON.toString());
-                                    events.add(new Event(event, messages[i].getDisplayOriginatingAddress()));
+                                    events.add(Event.fromJson(messages[i].getDisplayOriginatingAddress(),event));
                                 } catch(JSONException e) {
                                     Log.e("BROKEN_JSON",e.getMessage());
+                                } catch(InvalidEventException e2) {
+                                    Log.e("BROKEN_EVENT",e2.getMessage());
                                 }
                             }
                         }
@@ -319,7 +348,7 @@ public class TextGameLandingActivity extends AppCompatActivity {
                 protected void onPostExecute(List<Event> events) {
                     if (events != null) {
                         for (int i = 0; i < events.size(); ++i) {
-                            TextGameLandingActivity.this.eventHandler(events.get(i));
+                            events.get(i).handleEvent(TextGameLandingActivity.this);
                         }
                     }
                     mPendingResult.finish();

@@ -16,7 +16,7 @@ public class StartGameEvent extends Event {
 
     @Override
     public void handleEvent(Activity activity) {
-
+        // TODO: send
     }
 
     @Override

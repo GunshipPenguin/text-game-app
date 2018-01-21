@@ -17,7 +17,7 @@ public class OpenLobbyEvent extends Event {
 
     @Override
     public void handleEvent(Activity activity) {
-
+        //TODO: send
     }
 
     @Override
