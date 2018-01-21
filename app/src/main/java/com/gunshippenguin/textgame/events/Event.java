@@ -1,15 +1,21 @@
 package com.gunshippenguin.textgame.events;
 
 import android.app.Activity;
+import android.telephony.SmsManager;
+import android.util.Base64;
 
 import com.gunshippenguin.textgame.CapturePoint;
 import com.gunshippenguin.textgame.EnemySpawn;
+import com.gunshippenguin.textgame.SmsUtils;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.Date;
 import java.util.List;
+import java.util.zip.DataFormatException;
+import java.util.zip.Deflater;
+import java.util.zip.Inflater;
 
 /**
  * Abstract base class for all events
@@ -23,6 +29,21 @@ public abstract class Event {
 
     public final String getPhoneNumber() {
         return mPhoneNumber;
+    }
+
+    public static Event fromCompressedAndEncoded(String phoneNumber, String compressed) throws DataFormatException, JSONException, InvalidEventException {
+        Inflater inflater = new Inflater();
+        byte[] messageText = Base64.decode(compressed, Base64.DEFAULT);
+        inflater.setInput(messageText,0,messageText.length);
+        byte[] result = new byte[1024];
+
+        StringBuilder decompressed = new StringBuilder();
+        while (!inflater.finished()) {
+            inflater.inflate(result);
+            decompressed.append(new String(result));
+        }
+
+        return fromJson(phoneNumber, new JSONObject(decompressed.toString()));
     }
 
     public static Event fromJson(String phoneNumber, JSONObject eventJson) throws JSONException, InvalidEventException {
@@ -48,5 +69,28 @@ public abstract class Event {
     }
 
     public abstract void handleEvent(Activity activity);
+    protected abstract JSONObject getJson();
 
+    // Compresses and encodes this event into a string
+    private String compressAndEncode() {
+        Deflater deflater = new Deflater();
+        deflater.setInput(getJson().toString().getBytes());
+        deflater.finish();
+
+        byte[] result = new byte[1024];
+        deflater.deflate(result);
+
+        return Base64.encodeToString(result,Base64.DEFAULT);
+    }
+
+    public void sendToNumber(String number) {
+        SmsUtils.sendMessage(number, compressAndEncode());
+    }
+
+    public void sendToNumbers(List<String> numbers) {
+        String data = compressAndEncode();
+        for (String number : numbers) {
+            SmsUtils.sendMessage(number, data);
+        }
+    }
 }
