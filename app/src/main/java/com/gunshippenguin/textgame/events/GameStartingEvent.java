@@ -10,17 +10,24 @@ import java.util.List;
 import com.gunshippenguin.textgame.CapturePoint;
 import com.gunshippenguin.textgame.EnemySpawn;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 public class GameStartingEvent extends Event {
     Date mTimeStamp;
+    Date mGameEnd;
     List<String> mPlayerNumbers;
     List<CapturePoint> mCapturePoints;
     List<EnemySpawn> mEnemySpawns;
 
+
     public GameStartingEvent(String phoneNumber, Date timeStamp, List<String> playerNumbers,
-                             List<CapturePoint> capturePoints, List<EnemySpawn> enemySpawns) {
+                             List<CapturePoint> capturePoints, List<EnemySpawn> enemySpawns,
+                             Date gameEnd) {
         super(phoneNumber);
         mEnemySpawns = enemySpawns;
         mTimeStamp = timeStamp;
+        mGameEnd = gameEnd;
         mPlayerNumbers = playerNumbers;
         mCapturePoints = capturePoints;
     }
@@ -28,5 +35,16 @@ public class GameStartingEvent extends Event {
     @Override
     public void handleEvent(Activity activity) {
 
+    }
+    @Override
+    public JSONObject getJson() throws JSONException {
+        JSONObject json = new JSONObject();
+        json.put("event_type", "game_starting");
+        json.put("timestamp", mTimeStamp.getTime());
+        json.put("capture_points", JsonUtils.capturePointsListToJsonArray(mCapturePoints));
+        json.put("enemy_spawns", JsonUtils.enemySpawnListToJsonArray(mEnemySpawns));
+        json.put("game_end", mGameEnd.getTime());
+
+        return json;
     }
 }

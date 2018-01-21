@@ -24,7 +24,7 @@ public class JsonUtils {
      * @return A List of strings
      * @throws JSONException If there was an error parsing the JSONArray
      */
-    public static List<String> parseStringArray(JSONArray array) throws JSONException {
+    public static List<String> jsonStringArrayToList(JSONArray array) throws JSONException {
         List<String> list = new ArrayList<>();
 
         for(int i=0;i<array.length();i++){
@@ -33,7 +33,7 @@ public class JsonUtils {
         return list;
     }
 
-    public static List<CapturePoint> parseCapturePointArray(JSONArray array) throws JSONException {
+    public static List<CapturePoint> jsonCapturePointsArrayToList(JSONArray array) throws JSONException {
         List<CapturePoint> list = new ArrayList<>();
 
         for(int i=0;i<array.length();i++) {
@@ -44,7 +44,7 @@ public class JsonUtils {
         return list;
     }
 
-    public static List<EnemySpawn> parseEnemySpawnArray(JSONArray array) throws JSONException {
+    public static List<EnemySpawn> jsonEnemySpawnArrayToList(JSONArray array) throws JSONException {
         List<EnemySpawn> list = new ArrayList<>();
 
         for(int i=0;i<array.length();i++) {
@@ -52,5 +52,42 @@ public class JsonUtils {
             list.add(new EnemySpawn(new Date(pointJson.getLong("timestamp")), pointJson.getInt("point")));
         }
         return list;
+    }
+
+    public static JSONArray stringListToJsonArray(List<String> list) throws JSONException {
+        JSONArray array = new JSONArray();
+
+        for (String string : list) {
+            array.put(string);
+        }
+
+        return array;
+    }
+
+    public static JSONArray capturePointsListToJsonArray(List<CapturePoint> list) throws JSONException{
+        JSONArray array = new JSONArray();
+
+        for (CapturePoint capturePoint : list) {
+            JSONObject cpJson = new JSONObject();
+            cpJson.put("latitude", capturePoint.getLatLng().latitude);
+            cpJson.put("longitude", capturePoint.getLatLng().longitude);
+            cpJson.put("point" , capturePoint.getNumber());
+            array.put(cpJson);
+        }
+
+        return array;
+    }
+
+    public static JSONArray enemySpawnListToJsonArray(List<EnemySpawn> list) throws JSONException {
+        JSONArray array = new JSONArray();
+
+        for (EnemySpawn enemySpawn : list) {
+            JSONObject esJson = new JSONObject();
+            esJson.put("point", enemySpawn.getPointNumber());
+            esJson.put("timestamps", enemySpawn.getTime().getTime());
+            array.put(esJson);
+        }
+
+        return array;
     }
 }
