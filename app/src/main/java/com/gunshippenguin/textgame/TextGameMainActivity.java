@@ -251,8 +251,8 @@ public class TextGameMainActivity extends AppCompatActivity
             }
         };
 
-        backgroundEventsTimer.scheduleAtFixedRate(broadcastPositionTask, 5000, 60000);
-        backgroundEventsTimer.scheduleAtFixedRate(checkCaptureTreasureTask, 2000, 2000);
+        backgroundEventsTimer.scheduleAtFixedRate(broadcastPositionTask, 12000000, 60000);
+        backgroundEventsTimer.scheduleAtFixedRate(checkCaptureTreasureTask, 200000, 2000);
     }
 
     @Override

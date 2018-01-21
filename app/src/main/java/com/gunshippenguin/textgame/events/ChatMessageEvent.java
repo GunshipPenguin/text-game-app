@@ -11,7 +11,6 @@ import org.json.JSONObject;
 
 public class ChatMessageEvent extends Event implements DisplayableInterface{
     private String message;
-    private String content;
 
     public ChatMessageEvent(String phoneNumber, String message) {
         super(phoneNumber);
@@ -49,7 +48,7 @@ public class ChatMessageEvent extends Event implements DisplayableInterface{
     public JSONObject getJson() throws JSONException {
         JSONObject json = new JSONObject();
         json.put("event_type", "chat_message");
-        json.put("message", content);
+        json.put("message", message);
         return json;
     }
 }
