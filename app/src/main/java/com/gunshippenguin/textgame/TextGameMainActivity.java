@@ -132,12 +132,12 @@ public class TextGameMainActivity extends AppCompatActivity
 
         Bundle gameData = getIntent().getBundleExtra(GameStartingEvent.BUNDLE_KEY);
 
-        mPlayerNumbers = (ArrayList<String>) gameData.getSerializable(GameStartingEvent.PLAYER_NUMBERS_KEY);
-        for (String number : mPlayerNumbers) {
-            playerScores.put(number, 0);
-        }
-
-        mTreasureSpawns = (ArrayList<TreasureSpawn>) gameData.getSerializable(GameStartingEvent.TREASURE_SPAWNS_KEY);
+//        mPlayerNumbers = (ArrayList<String>) gameData.getSerializable(GameStartingEvent.PLAYER_NUMBERS_KEY);
+//        for (String number : mPlayerNumbers) {
+//            playerScores.put(number, 0);
+//        }
+//
+//        mTreasureSpawns = (ArrayList<TreasureSpawn>) gameData.getSerializable(GameStartingEvent.TREASURE_SPAWNS_KEY);
 
         // Map Fragment
         SupportMapFragment mapFragment =
@@ -174,9 +174,9 @@ public class TextGameMainActivity extends AppCompatActivity
 
                     //create message event
                     ChatMessageEvent sentSMS = new ChatMessageEvent("0", message);
-                    sentSMS.sendToNumbers(mPlayerNumbers, getApplicationContext());
                     eventData.add((DisplayableInterface)sentSMS);
                     mAdapter.notifyItemInserted(0);
+                    sentSMS.sendToNumbers(mPlayerNumbers, getApplicationContext());
                     InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
                     imm.hideSoftInputFromWindow(sendMessageButton.getWindowToken(), 0); // close keyboard
                     messageField.setText(""); // clear
@@ -408,6 +408,8 @@ public class TextGameMainActivity extends AppCompatActivity
 
     private void broadcastTreasureCaptured(int number) {
         Event captureTreasureEvent = new CaptureTreasureEvent("111", new Date(), number);
+        eventData.add((DisplayableInterface)captureTreasureEvent);
+        mAdapter.notifyItemInserted(0);
         captureTreasureEvent.sendToNumbers(getPlayerNumbers(), this);
     }
 

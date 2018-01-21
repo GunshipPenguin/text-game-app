@@ -1,7 +1,9 @@
 package com.gunshippenguin.textgame.events;
 
 import android.app.Activity;
+import android.content.Context;
 
+import com.gunshippenguin.textgame.R;
 import com.gunshippenguin.textgame.TextGameMainActivity;
 
 import org.json.JSONException;
@@ -13,7 +15,7 @@ import java.util.Date;
  * Created by rhys on 21/01/18.
  */
 
-public class CaptureTreasureEvent extends Event {
+public class CaptureTreasureEvent extends Event implements DisplayableInterface {
     Date mTime;
     int mTreasureNumber;
 
@@ -31,6 +33,27 @@ public class CaptureTreasureEvent extends Event {
         uiHook.removeTreasureAtIndex(mTreasureNumber);
         uiHook.setEnemyScore();
     }
+
+    @Override
+    public String getMessage() {
+        return "Treasure worth " + mTreasureNumber + " was just claimed!";
+    }
+
+    @Override
+    public String getSenderNumber() {
+        return getPhoneNumber();
+    }
+
+    @Override
+    public int getColor(Context c) {
+        return c.getResources().getColor(R.color.green);
+    }
+
+    @Override
+    public boolean isChatMessage() {
+        return false;
+    }
+
 
     @Override
     public JSONObject getJson() throws JSONException {
