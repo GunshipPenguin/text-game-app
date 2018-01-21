@@ -26,7 +26,6 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.telephony.SmsManager;
 import android.telephony.SmsMessage;
 import android.util.Base64;
 import android.util.Log;
@@ -53,6 +52,7 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MapStyleOptions;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.gunshippenguin.textgame.events.ChatMessageEvent;
 import com.gunshippenguin.textgame.events.DisplayableInterface;
 import com.gunshippenguin.textgame.events.GameStartingEvent;
 
@@ -104,9 +104,9 @@ public class TextGameMainActivity extends AppCompatActivity
     TextView countdown;
     EditText messageField;
 
-    private ArrayList<DisplayableInterface> eventData;
+    public ArrayList<DisplayableInterface> eventData;
     private RecyclerView mRecyclerView;
-    private RecyclerView.Adapter mAdapter;
+    public RecyclerView.Adapter mAdapter;
     private LinearLayoutManager mLayoutManager;
 
 
@@ -150,16 +150,13 @@ public class TextGameMainActivity extends AppCompatActivity
         sendMessageButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // Send the message
                 String message = messageField.getText().toString();
-                //create message event
-                // eventData.add(0, <DisplayableInterface>);
-                // mAdapter.notifyItemInserted(0);
 
                 mAdapter.notifyItemInserted(0);
                 if (message.length() > 0){
-                    // Replace with Rhys' magic functions
-                    sendChatMessage("6477799320", message);
+
+                    //create message event
+                    DisplayableInterface sentSMS = new ChatMessageEvent("", message);
                     InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
                     imm.hideSoftInputFromWindow(sendMessageButton.getWindowToken(), 0); // close keyboard
                     messageField.setText(""); // clear
@@ -176,7 +173,7 @@ public class TextGameMainActivity extends AppCompatActivity
         // Start timer
         countdown = (TextView)findViewById(R.id.countdownTimer);
 
-        new CountDownTimer(16069000, 1000) { // adjust the milli seconds here
+        new CountDownTimer(900000, 1000) { // adjust the milli seconds here
 
             public void onTick(long millisUntilFinished) {
 
@@ -323,7 +320,7 @@ public class TextGameMainActivity extends AppCompatActivity
         LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
         MarkerOptions markerOptions = new MarkerOptions();
         markerOptions.position(latLng);
-        markerOptions.title("Current Position");
+        markerOptions.title("Your location");
         markerOptions.icon(getMarkerIcon("#4FC3F7"));
         mCurrLocationMarker = map.addMarker(markerOptions);
 
@@ -525,19 +522,23 @@ public class TextGameMainActivity extends AppCompatActivity
     }
 
 
-    private void sendChatMessage(String phoneNumber, String message) {
-        SmsManager sms = SmsManager.getDefault();
+    // private void sendChatMessage(String phoneNumber, String message) {
+    //     SmsManager sms = SmsManager.getDefault();
+    //
+    //     try {
+    //         JSONObject json = new JSONObject();
+    //         json.put("event_type", "chat_message");
+    //         json.put("message", message);
+    //         String b64Message = Base64.encode(json.toString().getBytes(), Base64.DEFAULT).toString();
+    //
+    //         sms.sendTextMessage(phoneNumber, null, b64Message, null, null);
+    //
+    //     } catch (Exception e){};
+    //
+    // }
 
-        try {
-            JSONObject json = new JSONObject();
-            json.put("event_type", "chat_message");
-            json.put("message", message);
-            String b64Message = Base64.encode(json.toString().getBytes(), Base64.DEFAULT).toString();
-
-            sms.sendTextMessage(phoneNumber, null, b64Message, null, null);
-
-        } catch (Exception e){};
-
+    public List<String> getPlayerNumbers(){
+        return mPlayerNumbers;
     }
 
     // getter and setter ui hooks

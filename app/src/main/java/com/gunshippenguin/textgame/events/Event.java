@@ -64,6 +64,8 @@ public abstract class Event {
                         eventJson.getJSONArray("players_in_lobby")));
             }
             case "start_game": { return new StartGameEvent(phoneNumber); }
+            case "chat_message":
+                return new ChatMessageEvent(phoneNumber, eventJson.getString("message"));
             case "game_starting": {
                 Date timestamp = new Date(eventJson.getLong("timestamp"));
                 Date gameEnd = new Date(eventJson.getLong("game_end"));
@@ -74,7 +76,7 @@ public abstract class Event {
                         eventJson.getJSONArray("enemy_spawns"));
                 return new GameStartingEvent(phoneNumber, timestamp, playerNumbers, capturePoints, enemySpawns, gameEnd);
             }
-            
+
             // Game events
             case "chat_message": {
                 return new ChatMessageEvent(phoneNumber, eventJson.getString("message"));
@@ -116,7 +118,7 @@ public abstract class Event {
         byte[] result = new byte[1024];
         int len = deflater.deflate(result);
 
-        return Base64.encodeToString(result,0,len,Base64.DEFAULT);
+        return Base64.encodeToString(result, 0, len, Base64.DEFAULT);
     }
 
     public void sendToNumber(String number, Context context) {
