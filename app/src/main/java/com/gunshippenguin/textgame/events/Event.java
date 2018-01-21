@@ -66,11 +66,10 @@ public abstract class Event {
             case "game_starting": {
 
                 Date timestamp = new Date(eventJson.getLong("timestamp"));
-                Date gameEnd = new Date(eventJson.getLong("game_end"));
                 List<String> playerNumbers = JsonUtils.jsonStringArrayToList(eventJson.getJSONArray("player_numbers"));
                 List<TreasureSpawn> treasureSpawns = JsonUtils.jsonTreasureSpawnArrayToList(
-                        eventJson.getJSONArray("enemy_spawns"));
-                return new GameStartingEvent(phoneNumber, timestamp, playerNumbers, treasureSpawns, gameEnd);
+                        eventJson.getJSONArray("treasure_spawns"));
+                return new GameStartingEvent(phoneNumber, timestamp, playerNumbers, treasureSpawns);
             }
 
             // Game events

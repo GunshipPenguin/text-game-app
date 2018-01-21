@@ -61,7 +61,7 @@ public class JsonUtils {
 
         for (TreasureSpawn treasureSpawn : list) {
             JSONObject esJson = new JSONObject();
-            esJson.put("timestamps", treasureSpawn.getTime().getTime());
+            esJson.put("timestamp", treasureSpawn.getTime().getTime());
             esJson.put("latitude", treasureSpawn.getLat());
             esJson.put("longitude",treasureSpawn.getLong());
             array.put(esJson);

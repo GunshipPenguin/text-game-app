@@ -1,11 +1,12 @@
 package com.gunshippenguin.textgame;
 
+import java.io.Serializable;
 import java.util.Date;
 
 /**
  * Represents an enemy spawn time
  */
-public class TreasureSpawn {
+public class TreasureSpawn implements Serializable {
     Date mTime;
     double mLatitude;
     double mLongitude;

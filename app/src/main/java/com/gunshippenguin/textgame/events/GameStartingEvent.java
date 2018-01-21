@@ -30,11 +30,11 @@ public class GameStartingEvent extends Event {
 
 
     public GameStartingEvent(String phoneNumber, Date timeStamp, List<String> playerNumbers,
-                             List<TreasureSpawn> treasureSpawns, Date gameEnd) {
+                             List<TreasureSpawn> treasureSpawns) {
         super(phoneNumber);
         mTreasureSpawns = treasureSpawns;
         mTimeStamp = timeStamp;
-        mGameEnd = gameEnd;
+        mGameEnd = new Date(new Date().getTime() + 300);
         mPlayerNumbers = playerNumbers;
     }
 

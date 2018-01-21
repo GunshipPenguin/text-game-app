@@ -90,7 +90,8 @@ public class StreamAdapter extends RecyclerView.Adapter<StreamAdapter.ViewHolder
             } else {
                 holder.smallDetail.setText(getContactNameByNumber(number)); // name
             }
-            if (byteArray != null){
+
+            if (byteArray != null) {
                 Bitmap bmp = BitmapFactory.decodeByteArray(byteArray, 0, byteArray.length);
                 holder.image.setImageBitmap(Bitmap.createScaledBitmap(bmp, 150, 150, false));
             }
