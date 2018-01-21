@@ -144,11 +144,6 @@ public class TextGameMainActivity extends AppCompatActivity
                 (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
-        // Load a start message
-        eventData.add((DisplayableInterface)(new GameInfoEvent("", "Game started! Go get as many points as you can!")));
-        mAdapter.notifyItemInserted(0);
-
-
         // List View
         mRecyclerView = (RecyclerView) findViewById(R.id.listView);
         mRecyclerView.setHasFixedSize(true);
@@ -161,9 +156,13 @@ public class TextGameMainActivity extends AppCompatActivity
         // specify an adapter (see also next example)
         eventData = new ArrayList<DisplayableInterface>();
 
-
         mAdapter = new StreamAdapter(getApplicationContext(), eventData);
         mRecyclerView.setAdapter(mAdapter);
+
+        // Load a start message
+        GameInfoEvent startingEvent = new GameInfoEvent("1", "Game started! Go get as many points as you can!");
+        eventData.add((DisplayableInterface)startingEvent);
+        mAdapter.notifyItemInserted(0);
 
         // Message actionSend
         final Button sendMessageButton = (Button)findViewById(R.id.sendMessage);
@@ -174,7 +173,7 @@ public class TextGameMainActivity extends AppCompatActivity
                 if (message.length() > 0){
 
                     //create message event
-                    ChatMessageEvent sentSMS = new ChatMessageEvent("", message);
+                    ChatMessageEvent sentSMS = new ChatMessageEvent("0", message);
                     sentSMS.sendToNumbers(mPlayerNumbers, getApplicationContext());
                     eventData.add((DisplayableInterface)sentSMS);
                     mAdapter.notifyItemInserted(0);

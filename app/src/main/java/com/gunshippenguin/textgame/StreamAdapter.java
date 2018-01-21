@@ -85,10 +85,15 @@ public class StreamAdapter extends RecyclerView.Adapter<StreamAdapter.ViewHolder
 
             String number = data.getSenderNumber();
             byte[] byteArray = getImageByNumber(number);
-            holder.smallDetail.setText(getContactNameByNumber(number)); // name
-
-            Bitmap bmp = BitmapFactory.decodeByteArray(byteArray, 0, byteArray.length);
-            holder.image.setImageBitmap(Bitmap.createScaledBitmap(bmp, 150, 150, false));
+            if (getContactNameByNumber(number).equals("?")){
+                holder.smallDetail.setText("Me"); // name
+            } else {
+                holder.smallDetail.setText(getContactNameByNumber(number)); // name
+            }
+            if (byteArray != null){
+                Bitmap bmp = BitmapFactory.decodeByteArray(byteArray, 0, byteArray.length);
+                holder.image.setImageBitmap(Bitmap.createScaledBitmap(bmp, 150, 150, false));
+            }
         }
         holder.content.setText(data.getMessage());
         // ctx.getResources().getColor(R.color.lightGrey)

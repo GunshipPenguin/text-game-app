@@ -11,7 +11,6 @@ import org.json.JSONObject;
 
 public class GameInfoEvent extends Event implements DisplayableInterface{
     private String message;
-    private String content;
 
     public GameInfoEvent(String phoneNumber, String message) {
         super(phoneNumber);
@@ -43,6 +42,8 @@ public class GameInfoEvent extends Event implements DisplayableInterface{
 
     @Override
     public JSONObject getJson() throws JSONException {
-        return new JSONObject();
+        JSONObject json = new JSONObject();
+        json.put("event_type", "game_info_start");
+        return json;
     }
 }
