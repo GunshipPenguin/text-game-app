@@ -80,6 +80,11 @@ public class TextGameLandingActivity extends AppCompatActivity {
         }
     }
 
+    public void debugMain(View v) {
+        Intent intent = new Intent(this, TextGameMainActivity.class);
+        startActivity(intent);
+    }
+
     public void onClickPause(View v) {
         handleSelfRegistration();
     }

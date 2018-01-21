@@ -54,7 +54,6 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.gunshippenguin.textgame.events.ChatMessageEvent;
 import com.gunshippenguin.textgame.events.DisplayableInterface;
-import com.gunshippenguin.textgame.events.GameStartingEvent;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -116,13 +115,13 @@ public class TextGameMainActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_text_game_main);
 
-        Bundle gameData = getIntent().getBundleExtra(GameStartingEvent.BUNDLE_KEY);
+//        Bundle gameData = getIntent().getBundleExtra(GameStartingEvent.BUNDLE_KEY);
 
-        mPlayerNumbers = (ArrayList<String>) gameData.getSerializable(GameStartingEvent.PLAYER_NUMBERS_KEY);
-        mStartTime = (Date) gameData.getSerializable(GameStartingEvent.TIME_START_KEY);
-        mEndTime = (Date) gameData.getSerializable(GameStartingEvent.TIME_END_KEY);
-        mCapturePoints = (ArrayList<CapturePoint>) gameData.getSerializable(GameStartingEvent.CAPTURE_POINTS_KEY);
-        mEnemySpawns = (ArrayList<EnemySpawn>) gameData.getSerializable(GameStartingEvent.ENEMY_SPAWNS_KEY);
+//        mPlayerNumbers = (ArrayList<String>) gameData.getSerializable(GameStartingEvent.PLAYER_NUMBERS_KEY);
+//        mStartTime = (Date) gameData.getSerializable(GameStartingEvent.TIME_START_KEY);
+//        mEndTime = (Date) gameData.getSerializable(GameStartingEvent.TIME_END_KEY);
+//        mCapturePoints = (ArrayList<CapturePoint>) gameData.getSerializable(GameStartingEvent.CAPTURE_POINTS_KEY);
+//        mEnemySpawns = (ArrayList<EnemySpawn>) gameData.getSerializable(GameStartingEvent.ENEMY_SPAWNS_KEY);
 
         // Map Fragment
         SupportMapFragment mapFragment =
@@ -152,11 +151,13 @@ public class TextGameMainActivity extends AppCompatActivity
             public void onClick(View v) {
                 String message = messageField.getText().toString();
 
-                mAdapter.notifyItemInserted(0);
                 if (message.length() > 0){
 
                     //create message event
-                    DisplayableInterface sentSMS = new ChatMessageEvent("", message);
+                    ChatMessageEvent sentSMS = new ChatMessageEvent("", message);
+                    eventData.add(0, (DisplayableInterface)sentSMS);
+                    mAdapter.notifyItemInserted(0);
+                    sentSMS.sendToNumbers(mPlayerNumbers, getApplicationContext());
                     InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
                     imm.hideSoftInputFromWindow(sendMessageButton.getWindowToken(), 0); // close keyboard
                     messageField.setText(""); // clear

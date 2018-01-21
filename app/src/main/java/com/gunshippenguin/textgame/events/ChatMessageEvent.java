@@ -11,6 +11,7 @@ import org.json.JSONObject;
 
 public class ChatMessageEvent extends Event implements DisplayableInterface{
     private String message;
+    private String content;
 
     public ChatMessageEvent(String phoneNumber, String message) {
         super(phoneNumber);
@@ -20,7 +21,6 @@ public class ChatMessageEvent extends Event implements DisplayableInterface{
     @Override
     public void handleEvent(Activity activity) {
         TextGameMainActivity uiHook = (TextGameMainActivity) activity;
-        sendToNumbers(uiHook.getPlayerNumbers(), activity.getApplicationContext());
         uiHook.eventData.add(0, (DisplayableInterface)this);
         uiHook.mAdapter.notifyItemInserted(0);
     }
@@ -49,7 +49,7 @@ public class ChatMessageEvent extends Event implements DisplayableInterface{
     public JSONObject getJson() throws JSONException {
         JSONObject json = new JSONObject();
         json.put("event_type", "chat_message");
-        json.put("message", message);
+        json.put("message", content);
         return json;
     }
 }
