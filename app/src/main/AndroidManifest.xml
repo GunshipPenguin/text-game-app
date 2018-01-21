@@ -21,7 +21,8 @@
             android:value="@string/google_maps_key" />
 
 
-        <activity android:name=".TextGameLandingActivity">
+        <activity android:name=".TextGameLandingActivity"
+            android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -30,7 +31,8 @@
         </activity>
         <activity
             android:name=".TextGameMainActivity"
-            android:windowSoftInputMode="stateVisible|adjustPan">
+            android:windowSoftInputMode="stateVisible|adjustPan"
+            android:screenOrientation="portrait">
         </activity>
     </application>
 

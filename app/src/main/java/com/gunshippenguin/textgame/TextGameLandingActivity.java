@@ -12,9 +12,15 @@ import android.support.v7.app.AppCompatActivity;
 import android.telephony.SmsMessage;
 import android.util.Base64;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
+import android.widget.TextView;
+
+import com.google.android.gms.games.Player;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -32,6 +38,7 @@ public class TextGameLandingActivity extends AppCompatActivity {
     private Button mStartButton = null;
     private Button mJoinButton = null;
     private ListView mLobbyListings = null;
+    private PlayerAdapter mAdapter = null;
     private Boolean mLobbyLeader = false;
 
     @Override
@@ -48,16 +55,22 @@ public class TextGameLandingActivity extends AppCompatActivity {
             mPlayerNumbers = new  ArrayList<String>();
         }
 
-        Button startButton = (Button)findViewById(R.id.startButton);
-        startButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(TextGameLandingActivity.this, TextGameMainActivity.class);
-                intent.putStringArrayListExtra("PLAYER_NUMBERS", mPlayerNumbers);
-                startActivity(intent);
-            }
-        });
+        if (mAdapter == null) {
+            mAdapter = new PlayerAdapter(this,R.layout.player_name);
+        }
+        getLobbyList(this).setAdapter(mAdapter);
+    }
 
+    public void onClickStart(View v) {
+        if (mLobbyLeader) {
+            handleRequestStartGame();
+        } else {
+            handleRequestOpenLobby();
+        }
+    }
+
+    public void onClickPause(View v) {
+        handleSelfRegistration();
     }
 
     protected void eventHandler(Event event) {
@@ -136,7 +149,7 @@ public class TextGameLandingActivity extends AppCompatActivity {
         return mLobbyListings;
     }
 
-    private void handleOpenLobby() {
+    private void handleRequestOpenLobby() {
         // request the server to open the lobby
     }
 
@@ -159,11 +172,10 @@ public class TextGameLandingActivity extends AppCompatActivity {
                 String temp = numbers.getString(i);
                 if (!mPlayerNumbers.contains(temp)) {
                     mPlayerNumbers.add(temp);
+                    //TODO: look up contact name later
+                    mAdapter.add(temp);
                 }
             }
-
-            // TODO: Call a function to update the listview
-            // Alternatively add players in the loop above with a separate asynchronous call
 
             if (!mLobbyLeader) {
                 getJoinButton(this).setEnabled(false);
@@ -175,7 +187,7 @@ public class TextGameLandingActivity extends AppCompatActivity {
         }
     }
 
-    private void handleRequestStartGame(Event event) {
+    private void handleRequestStartGame() {
         //we are requesting the server to start the game
     }
 
@@ -190,6 +202,24 @@ public class TextGameLandingActivity extends AppCompatActivity {
 
         // launch an intent
 
+    }
+
+    public class PlayerAdapter extends ArrayAdapter<String> {
+        public PlayerAdapter(Context context, int layoutID) {
+            super(context,layoutID);
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+            String playerName = getItem(position);
+            if (convertView == null) {
+                convertView = LayoutInflater.from(getContext()).inflate(R.layout.player_name,parent,false);
+            }
+
+            TextView name = (TextView) convertView.findViewById(R.id.playerName);
+            name.setText(playerName);
+            return convertView;
+        }
     }
 
     public class LandingTextReceiver extends BroadcastReceiver {
