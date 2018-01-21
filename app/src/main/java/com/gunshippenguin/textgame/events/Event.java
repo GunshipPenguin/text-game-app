@@ -64,8 +64,6 @@ public abstract class Event {
                         eventJson.getJSONArray("players_in_lobby")));
             }
             case "start_game": { return new StartGameEvent(phoneNumber); }
-            case "chat_message":
-                return new ChatMessageEvent(phoneNumber, eventJson.getString("message"));
             case "game_starting": {
                 Date timestamp = new Date(eventJson.getLong("timestamp"));
                 Date gameEnd = new Date(eventJson.getLong("game_end"));
