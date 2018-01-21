@@ -4,14 +4,11 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 
-import com.google.android.gms.maps.model.LatLng;
-
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
 import com.gunshippenguin.textgame.CapturePoint;
-import com.gunshippenguin.textgame.EnemySpawn;
 import com.gunshippenguin.textgame.TextGameMainActivity;
 
 import org.json.JSONException;

@@ -56,9 +56,7 @@ import com.gunshippenguin.textgame.events.ChatMessageEvent;
 import com.gunshippenguin.textgame.events.DisplayableInterface;
 import com.gunshippenguin.textgame.events.Event;
 import com.gunshippenguin.textgame.events.GameStartingEvent;
-import com.gunshippenguin.textgame.events.LeftCapturePointEvent;
 import com.gunshippenguin.textgame.events.PositionUpdateEvent;
-import com.gunshippenguin.textgame.events.StartCaptureEvent;
 
 import org.json.JSONException;
 import org.json.JSONObject;

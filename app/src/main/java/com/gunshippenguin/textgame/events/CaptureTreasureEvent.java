@@ -11,15 +11,16 @@ import java.util.Date;
  * Created by rhys on 21/01/18.
  */
 
-public class StartCaptureEvent extends Event {
+public class CaptureTreasureEvent extends Event {
     Date mTime;
-    int mCapturePoint;
+    int mTreasureNumber;
 
-    public StartCaptureEvent(String phoneNumber, int capturePoint, Date timestamp) {
+    public CaptureTreasureEvent(String phoneNumber, Date timestamp, int treasureNumber) {
         super(phoneNumber);
         mTime = timestamp;
-        mCapturePoint = capturePoint;
+        mTreasureNumber = treasureNumber;
     }
+
     @Override
     public void handleEvent(Activity activity) {
 
@@ -28,9 +29,9 @@ public class StartCaptureEvent extends Event {
     @Override
     public JSONObject getJson() throws JSONException {
         JSONObject json = new JSONObject();
-        json.put("event_type", "start_capture");
+        json.put("event_type", "capture_treasure");
         json.put("timestamp", mTime.getTime());
-        json.put("capture_point", mCapturePoint);
+        json.put("treasure_number", mTreasureNumber);
 
         return json;
     }
