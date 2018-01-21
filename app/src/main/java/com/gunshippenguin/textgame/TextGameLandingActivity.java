@@ -52,7 +52,7 @@ public class TextGameLandingActivity extends AppCompatActivity {
         }
 
         if (mPlayerNumbers == null) {
-            mPlayerNumbers = new  ArrayList<String>();
+            mPlayerNumbers = new ArrayList<String>();
         }
 
         if (mAdapter == null) {
@@ -172,7 +172,7 @@ public class TextGameLandingActivity extends AppCompatActivity {
                 String temp = numbers.getString(i);
                 if (!mPlayerNumbers.contains(temp)) {
                     mPlayerNumbers.add(temp);
-                    //TODO: look up contact name later
+                    //TODO: look up contact name and add instead of phone number
                     mAdapter.add(temp);
                 }
             }
@@ -201,7 +201,6 @@ public class TextGameLandingActivity extends AppCompatActivity {
         String compressedJSON = Base64.encodeToString(result,Base64.DEFAULT);
 
         // launch an intent
-
     }
 
     public class PlayerAdapter extends ArrayAdapter<String> {
