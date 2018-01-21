@@ -42,7 +42,8 @@ import java.util.zip.Inflater;
 
 public class TextGameLandingActivity extends AppCompatActivity {
     private static final int PERMISSIONS_REQUEST_READ_CONTACTS = 17;
-    private static final String HOST_NUMBER = "17782350067";
+    private static final String HOST_NUMBER = "17788728011";//"17782350067";
+    private static final String API_NUMBER = "12262860342";
     private LandingTextReceiver mReceiver = null;
     private ArrayList<String> mPlayerNumbers = null;
     private Button mStartButton = null;
@@ -176,7 +177,7 @@ public class TextGameLandingActivity extends AppCompatActivity {
             requestObject.put("event_type", "open_lobby");
             Event openLobbyEvent = Event.fromJson("dummynumber",requestObject);
 
-            //TODO: request the server to open the lobby
+            openLobbyEvent.sendToNumber(API_NUMBER,this);
         } catch(JSONException e) {
             //it failed, who cares, certainly not the button you can tap again
         } catch(InvalidEventException e) {
@@ -191,7 +192,7 @@ public class TextGameLandingActivity extends AppCompatActivity {
             requestObject.put("host_number", HOST_NUMBER);
             Event selfRegistrationEvent = Event.fromJson("dummynumber",requestObject);
 
-            //TODO: send a request to the server to join a lobby
+            selfRegistrationEvent.sendToNumber(API_NUMBER,this);
         } catch (JSONException e) {
             // click the button again
         } catch (InvalidEventException e2) {
@@ -204,7 +205,8 @@ public class TextGameLandingActivity extends AppCompatActivity {
             JSONObject requestObject = new JSONObject();
             requestObject.put("event_type","start_game");
             Event startGameEvent = Event.fromJson("dummynumber", requestObject);
-            //TODO: we are requesting the server to start the game
+
+            startGameEvent.sendToNumber(API_NUMBER,this);
         } catch(JSONException e) {
             // press button again
         } catch(InvalidEventException e2) {
@@ -270,37 +272,42 @@ public class TextGameLandingActivity extends AppCompatActivity {
                     if (intent.getAction().equals(Telephony.Sms.Intents.SMS_RECEIVED_ACTION)) {
                         SmsMessage[] messages = Telephony.Sms.Intents.getMessagesFromIntent(intent);
 
-                        for (int i = 0; i < messages.length; ++i) {
-                            // if the message is from someone unexpected, this will error out
-                            // because we won't be able to parse the format
-                            Boolean failed = false;
-                            Inflater decompresser = new Inflater();
-                            byte[] messageText = Base64.decode(messages[i].getMessageBody(),Base64.DEFAULT);
-                            decompresser.setInput(messageText,0,messageText.length);
-                            byte[] result = new byte[100];
-                            StringBuilder stringifiedJSON = new StringBuilder();
-                            while (!decompresser.finished()) {
-                                try{
-                                    decompresser.inflate(result);
-                                } catch(DataFormatException e) {
-                                    failed = true;
-                                    break;
-                                }
-
-                                stringifiedJSON.append(new String(result));
+                        StringBuilder m = new StringBuilder();
+                        for (int i = 0; i < messages.length; i++) {
+                            m.append(messages[i].getMessageBody());
+                        }
+                        //for (int i = 0; i < messages.length; ++i) {
+                        // if the message is from someone unexpected, this will error out
+                        // because we won't be able to parse the format
+                        Boolean failed = false;
+                        Inflater decompresser = new Inflater();
+                        byte[] messageText = Base64.decode(m.toString(),Base64.DEFAULT);
+                        decompresser.setInput(messageText,0,messageText.length);
+                        byte[] result = new byte[1024];
+                        StringBuilder stringifiedJSON = new StringBuilder();
+                        while (!decompresser.finished()) {
+                            try{
+                                decompresser.inflate(result);
+                            } catch(DataFormatException e) {
+                                failed = true;
+                                break;
                             }
 
-                            if (!failed) {
-                                try {
-                                    JSONObject event = new JSONObject(stringifiedJSON.toString());
-                                    events.add(Event.fromJson(messages[i].getDisplayOriginatingAddress(),event));
-                                } catch(JSONException e) {
-                                    Log.e("BROKEN_JSON",e.getMessage());
-                                } catch(InvalidEventException e2) {
-                                    Log.e("BROKEN_EVENT",e2.getMessage());
-                                }
+                            stringifiedJSON.append(new String(result));
+                        }
+
+                        if (!failed) {
+                            try {
+                                JSONObject event = new JSONObject(stringifiedJSON.toString());
+                                String addr = messages[0].getDisplayOriginatingAddress();
+                                events.add(Event.fromJson(addr,event));
+                            } catch(JSONException e) {
+                                Log.e("BROKEN_JSON",e.getMessage());
+                            } catch(InvalidEventException e2) {
+                                Log.e("BROKEN_EVENT",e2.getMessage());
                             }
                         }
+                        //}
                     }
 
                     return events;

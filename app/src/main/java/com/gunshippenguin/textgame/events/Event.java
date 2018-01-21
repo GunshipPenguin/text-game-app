@@ -1,6 +1,7 @@
 package com.gunshippenguin.textgame.events;
 
 import android.app.Activity;
+import android.content.Context;
 import android.util.Base64;
 import android.util.Log;
 
@@ -79,20 +80,20 @@ public abstract class Event {
         deflater.finish();
 
         byte[] result = new byte[1024];
-        deflater.deflate(result);
+        int len = deflater.deflate(result);
 
-        return Base64.encodeToString(result,Base64.DEFAULT);
+        return Base64.encodeToString(result,0,len,Base64.DEFAULT);
     }
 
-    public void sendToNumber(String number) {
+    public void sendToNumber(String number, Context context) {
         try {
-            SmsUtils.sendMessage(number, compressAndEncode());
+            SmsUtils.sendMessage(number, compressAndEncode(), context);
         } catch (JSONException e) {
             Log.e("JSON", "JSON exception when sending to numbers");
         }
     }
 
-    public void sendToNumbers(List<String> numbers) {
+    public void sendToNumbers(List<String> numbers, Context context) {
         String data;
         try {
             data = compressAndEncode();
@@ -102,7 +103,7 @@ public abstract class Event {
         }
 
         for (String number : numbers) {
-            SmsUtils.sendMessage(number, data);
+            SmsUtils.sendMessage(number, data, context);
         }
     }
 }
