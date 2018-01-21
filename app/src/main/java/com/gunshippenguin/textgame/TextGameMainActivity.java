@@ -54,6 +54,11 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.gunshippenguin.textgame.events.ChatMessageEvent;
 import com.gunshippenguin.textgame.events.DisplayableInterface;
+import com.gunshippenguin.textgame.events.Event;
+import com.gunshippenguin.textgame.events.GameStartingEvent;
+import com.gunshippenguin.textgame.events.LeftCapturePointEvent;
+import com.gunshippenguin.textgame.events.PositionUpdateEvent;
+import com.gunshippenguin.textgame.events.StartCaptureEvent;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -61,6 +66,8 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
 import java.util.zip.DataFormatException;
 import java.util.zip.Inflater;
@@ -73,6 +80,8 @@ public class TextGameMainActivity extends AppCompatActivity
         GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener,
         LocationListener {
+
+    private static final int CAPTURE_POINT_DISTANCE_THRESHOLD_M = 12;
 
     private static final int PERMISSIONS_REQUEST_READ_CONTACTS = 1;
     private static final int PERMISSIONS_REQUEST_LOCATION = 2;
@@ -89,6 +98,8 @@ public class TextGameMainActivity extends AppCompatActivity
     private Date mStartTime;
     private Date mEndTime;
 
+    // -1 indicates no capture point
+    private int mCurrentCapturePoint = -1;
 
     GoogleMap map;
     SupportMapFragment mapFrag;
@@ -108,7 +119,10 @@ public class TextGameMainActivity extends AppCompatActivity
     public RecyclerView.Adapter mAdapter;
     private LinearLayoutManager mLayoutManager;
 
-
+    Timer backgroundEventsTimer;
+    TimerTask broadcastPositionTask;
+    TimerTask checkEnterLeaveCapturePointTask;
+    TimerTask checkChangeCapturePointTask;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -196,6 +210,32 @@ public class TextGameMainActivity extends AppCompatActivity
             mReceiver = new LandingTextReceiver();
             registerReceiver(mReceiver, new IntentFilter(Telephony.Sms.Intents.SMS_RECEIVED_ACTION));
         }
+
+        // Background tasks
+        backgroundEventsTimer = new Timer();
+        broadcastPositionTask = new TimerTask() {
+            @Override
+            public void run() {
+                broadcastPosition();
+            }
+        };
+        checkEnterLeaveCapturePointTask = new TimerTask() {
+            @Override
+            public void run() {
+                checkEnterLeaveCapturePoint();
+            }
+        };
+
+        checkChangeCapturePointTask = new TimerTask() {
+            @Override
+            public void run() {
+                checkChangeCapturePoint();
+            }
+        };
+
+        backgroundEventsTimer.scheduleAtFixedRate(broadcastPositionTask, 60000, 60000);
+        backgroundEventsTimer.scheduleAtFixedRate(checkEnterLeaveCapturePointTask, 2000, 2000);
+        backgroundEventsTimer.scheduleAtFixedRate(checkChangeCapturePointTask, 2000, 2000);
     }
 
     @Override
@@ -358,6 +398,59 @@ public class TextGameMainActivity extends AppCompatActivity
         return name;
     }
 
+    private CapturePoint getCapturePointByNumber(int number) {
+        for (CapturePoint capturePoint : mCapturePoints) {
+            if (capturePoint.getNumber() == number) {
+                return capturePoint;
+            }
+        }
+        throw new RuntimeException("Capture point with id " + Integer.toString(number) + " not found");
+    }
+
+    private void broadcastPosition() {
+        Event positionUpdateEvent = new PositionUpdateEvent("111", new Date(),
+                mLastLocation.getLatitude(), mLastLocation.getLongitude());
+        positionUpdateEvent.sendToNumbers(getPlayerNumbers(), this);
+    }
+
+    private void leaveCapturePoint() {
+        Event leaveCapturePointEvent = new LeftCapturePointEvent("111", new Date(),
+                mCurrentCapturePoint);
+        leaveCapturePointEvent.sendToNumbers(getPlayerNumbers(), this);
+    }
+
+    private void enterCapturePoint(int number) {
+        Event enterCapturePointEvent = new StartCaptureEvent("111", new Date(), number);
+        mCurrentCapturePoint = number;
+        enterCapturePointEvent.sendToNumbers(getPlayerNumbers(), this);
+    }
+
+    private void checkEnterLeaveCapturePoint() {
+        if (mCurrentCapturePoint != -1) { // Already on capture point
+            CapturePoint cp = getCapturePointByNumber(mCurrentCapturePoint);
+            Location cpLocation = new Location("");
+            cpLocation.setLatitude(cp.getLatLng().latitude);
+            cpLocation.setLongitude(cp.getLatLng().longitude);
+
+            if (mLastLocation.distanceTo(cpLocation) > CAPTURE_POINT_DISTANCE_THRESHOLD_M) {
+                leaveCapturePoint();
+            }
+        } else { // Not already on a capture point
+            for (CapturePoint cp : mCapturePoints) {
+                Location cpLocation  = new Location("");
+                cpLocation.setLatitude(cp.getLatLng().latitude);
+                cpLocation.setLongitude(cp.getLatLng().longitude);
+
+                if (mLastLocation.distanceTo(cpLocation) < CAPTURE_POINT_DISTANCE_THRESHOLD_M) {
+                    enterCapturePoint(cp.getNumber());
+                }
+            }
+        }
+    }
+
+    private void checkChangeCapturePoint() {
+
+    }
 
     public void updateTeamScore(String toThis) {
         TextView textView = (TextView) findViewById(R.id.enemyScore);
