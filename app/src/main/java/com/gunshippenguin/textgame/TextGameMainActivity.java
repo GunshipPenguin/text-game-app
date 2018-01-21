@@ -53,6 +53,7 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MapStyleOptions;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.gunshippenguin.textgame.events.DisplayableInterface;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -97,7 +98,7 @@ public class TextGameMainActivity extends AppCompatActivity
     TextView countdown;
     EditText messageField;
 
-    private ArrayList<String> eventData;
+    private ArrayList<DisplayableInterface> eventData;
     private RecyclerView mRecyclerView;
     private RecyclerView.Adapter mAdapter;
     private LinearLayoutManager mLayoutManager;
@@ -124,14 +125,8 @@ public class TextGameMainActivity extends AppCompatActivity
         mLayoutManager.setReverseLayout(true);
 
         // specify an adapter (see also next example)
-        eventData = new ArrayList<String>();
+        eventData = new ArrayList<DisplayableInterface>();
 
-        //test
-        eventData.add(0, "{\"event_type\": \"game_lobby_started\"}");
-        eventData.add(0, "{\"event_type\": \"chat_message\",\"message\": \"This is a message\"}");
-        eventData.add(0, "{\"timestamp\": 1516425738,\"event_type\": \"start_capture\",\"capture_point\": 0}");
-        eventData.add(0, "{\"timestamp\": 1516425738,\"event_type\": \"left_capture_point\",\"capture_point\": 0}");
-        eventData.add(0, "{\"timestamp\": 1516425738,\"event_type\": \"defeat_enemy\",\"capture_point\": 0}");
 
         mAdapter = new StreamAdapter(getApplicationContext(), eventData);
         mRecyclerView.setAdapter(mAdapter);
@@ -143,10 +138,13 @@ public class TextGameMainActivity extends AppCompatActivity
             public void onClick(View v) {
                 // Send the message
                 String message = messageField.getText().toString();
-                eventData.add(0, "{\"event_type\": \"own_message\",\"message\":\"" + message + "\"}");
+                //create message event
+                // eventData.add(0, <DisplayableInterface>);
+                // mAdapter.notifyItemInserted(0);
+
                 mAdapter.notifyItemInserted(0);
                 if (message.length() > 0){
-                    // Replace with iteration of users
+                    // Replace with Rhys' magic functions
                     sendChatMessage("6477799320", message);
                     InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
                     imm.hideSoftInputFromWindow(sendMessageButton.getWindowToken(), 0); // close keyboard
@@ -481,8 +479,6 @@ public class TextGameMainActivity extends AppCompatActivity
                                     }
 
                                     stringifiedJSON.append(new String(result));
-                                    eventData.add(0, new String(result));
-                                    mAdapter.notifyItemInserted(0);
                                 }
 
                                 if (!failed) {

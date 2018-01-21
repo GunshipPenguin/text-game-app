@@ -7,6 +7,7 @@ import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
+import android.provider.BaseColumns;
 import android.provider.ContactsContract;
 import android.provider.ContactsContract.Contacts;
 import android.provider.ContactsContract.PhoneLookup;
@@ -20,11 +21,13 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.gunshippenguin.textgame.events.DisplayableInterface;
+
 import java.util.ArrayList;
 import java.util.Random;
 
 public class StreamAdapter extends RecyclerView.Adapter<StreamAdapter.ViewHolder> {
-    private ArrayList<String> mDataset;
+    private ArrayList<DisplayableInterface> mDataset;
     private Context ctx;
 
     // Provide a reference to the views for each data item
@@ -53,7 +56,7 @@ public class StreamAdapter extends RecyclerView.Adapter<StreamAdapter.ViewHolder
     }
 
     // Provide a suitable constructor (depends on the kind of dataset)
-    public StreamAdapter(Context context, ArrayList<String> myDataset) {
+    public StreamAdapter(Context context, ArrayList<DisplayableInterface> myDataset) {
         this.ctx = context;
         mDataset = myDataset;
     }
@@ -74,17 +77,22 @@ public class StreamAdapter extends RecyclerView.Adapter<StreamAdapter.ViewHolder
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
 
-        String data = mDataset.get(position);
-        if (data.contains("chat_message")){
+        DisplayableInterface data = mDataset.get(position);
+        if (data.isChatMessage()){
+            // show profile box and name section
             holder.smallDetail.setVisibility(View.VISIBLE);
             holder.image.setVisibility(View.VISIBLE);
-            byte[] byteArray = getImageByNumber("6477799320");
-            holder.smallDetail.setText("temp");
-            holder.marker.setBackgroundColor(ctx.getResources().getColor(R.color.lightGrey));
+
+            String number = data.getSenderNumber();
+            byte[] byteArray = getImageByNumber(number);
+            holder.smallDetail.setText(getContactNameByNumber(number)); // name
+
             Bitmap bmp = BitmapFactory.decodeByteArray(byteArray, 0, byteArray.length);
             holder.image.setImageBitmap(Bitmap.createScaledBitmap(bmp, 150, 150, false));
         }
-        holder.content.setText(mDataset.get(position));
+        holder.content.setText(data.getMessage());
+        // ctx.getResources().getColor(R.color.lightGrey)
+        holder.marker.setBackgroundColor(data.getColor(ctx));
 
     }
 
@@ -94,6 +102,27 @@ public class StreamAdapter extends RecyclerView.Adapter<StreamAdapter.ViewHolder
         return mDataset.size();
     }
 
+    public String getContactNameByNumber(String number) {
+        String name = "?";
+        Uri uri = Uri.withAppendedPath(ContactsContract.PhoneLookup.CONTENT_FILTER_URI, Uri.encode(number));
+
+        ContentResolver contentResolver = ctx.getContentResolver();
+        Cursor contactLookup = contentResolver.query(uri, new String[] {BaseColumns._ID,
+                ContactsContract.PhoneLookup.DISPLAY_NAME }, null, null, null);
+
+        try {
+            if (contactLookup != null && contactLookup.getCount() > 0) {
+                contactLookup.moveToNext();
+                name = contactLookup.getString(contactLookup.getColumnIndex(ContactsContract.Data.DISPLAY_NAME));
+            }
+        } finally {
+            if (contactLookup != null) {
+                contactLookup.close();
+            }
+        }
+
+        return name;
+    }
 
     public byte[] getImageByNumber(String contactNumber) {
         Uri uri = Uri.withAppendedPath(ContactsContract.PhoneLookup.CONTENT_FILTER_URI, Uri.encode(contactNumber));
