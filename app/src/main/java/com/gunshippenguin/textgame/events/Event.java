@@ -6,7 +6,6 @@ import android.util.Base64;
 import android.util.Log;
 
 import com.gunshippenguin.textgame.CapturePoint;
-import com.gunshippenguin.textgame.EnemySpawn;
 import com.gunshippenguin.textgame.SmsUtils;
 
 import org.json.JSONException;
@@ -65,14 +64,17 @@ public abstract class Event {
             }
             case "start_game": { return new StartGameEvent(phoneNumber); }
             case "game_starting": {
+                /*
                 Date timestamp = new Date(eventJson.getLong("timestamp"));
                 Date gameEnd = new Date(eventJson.getLong("game_end"));
                 List<String> playerNumbers = JsonUtils.jsonStringArrayToList(eventJson.getJSONArray("player_numbers"));
                 List<CapturePoint> capturePoints = JsonUtils.jsonCapturePointsArrayToList(
                         eventJson.getJSONArray("capture_points"));
-                List<EnemySpawn> enemySpawns = JsonUtils.jsonEnemySpawnArrayToList(
+                List<Treasure> enemySpawns = JsonUtils.jsonEnemySpawnArrayToList(
                         eventJson.getJSONArray("enemy_spawns"));
                 return new GameStartingEvent(phoneNumber, timestamp, playerNumbers, capturePoints, enemySpawns, gameEnd);
+                */
+                return null;
             }
 
             // Game events
@@ -85,20 +87,10 @@ public abstract class Event {
                 Date timestamp = new Date(eventJson.getLong("timestamp"));
                 return new PositionUpdateEvent(phoneNumber, timestamp, latitude, longitude);
             }
-            case "start_capture": {
+            case "capture_treasure": {
                 Date timestamp = new Date(eventJson.getLong("timestamp"));
-                int capturePoint = eventJson.getInt("capture_point");
-                return new StartCaptureEvent(phoneNumber, capturePoint, timestamp);
-            }
-            case "left_capture_point": {
-                Date timestamp = new Date(eventJson.getLong("timestamp"));
-                int capturePoint = eventJson.getInt("capture_point");
-                return new LeftCapturePointEvent(phoneNumber, timestamp, capturePoint);
-            }
-            case "defeat_enemy": {
-                Date timestamp = new Date(eventJson.getLong("timestamp"));
-                int capturePoint = eventJson.getInt("capture_point");
-                return new DefeatEnemyEvent(phoneNumber, timestamp, capturePoint);
+                int treasureNumber = eventJson.getInt("treasure_number");
+                return new CaptureTreasureEvent(phoneNumber, timestamp, treasureNumber);
             }
             default: throw new InvalidEventException();
         }
