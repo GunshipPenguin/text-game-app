@@ -2,6 +2,8 @@ package com.gunshippenguin.textgame.events;
 
 import android.app.Activity;
 
+import com.gunshippenguin.textgame.TextGameMainActivity;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -23,7 +25,11 @@ public class CaptureTreasureEvent extends Event {
 
     @Override
     public void handleEvent(Activity activity) {
+        TextGameMainActivity uiHook = (TextGameMainActivity) activity;
 
+        uiHook.incrementPlayerByNumber(this.getPhoneNumber());
+        uiHook.removeTreasureAtIndex(mTreasureNumber);
+        uiHook.setEnemyScore();
     }
 
     @Override

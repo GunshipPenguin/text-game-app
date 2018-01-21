@@ -58,6 +58,7 @@ import com.gunshippenguin.textgame.events.DisplayableInterface;
 import com.gunshippenguin.textgame.events.Event;
 import com.gunshippenguin.textgame.events.GameInfoEvent;
 import com.gunshippenguin.textgame.events.GameStartingEvent;
+import com.gunshippenguin.textgame.events.InvalidEventException;
 import com.gunshippenguin.textgame.events.PositionUpdateEvent;
 
 import org.json.JSONException;
@@ -92,7 +93,6 @@ public class TextGameMainActivity extends AppCompatActivity
     private static final String TIME_FORMAT = "%02d:%02d:%02d";
     private static final String[] CAPTURE_POINT_LABELS = {"A", "B", "C", "D", "E"};
 
-    private LandingTextReceiver mReceiver = null;
 
     private List<String> mPlayerNumbers;
     private List<TreasureSpawn> mTreasureSpawns;
@@ -118,6 +118,9 @@ public class TextGameMainActivity extends AppCompatActivity
     Timer backgroundEventsTimer;
     TimerTask broadcastPositionTask;
     TimerTask checkCaptureTreasureTask;
+
+    private GameTextReceiver mReceiver = null;
+
 
     int ourScore = 0;
     Map<String, Integer> playerScores = new HashMap<>();
@@ -210,7 +213,7 @@ public class TextGameMainActivity extends AppCompatActivity
 
 
         if (mReceiver == null) {
-            mReceiver = new LandingTextReceiver();
+            mReceiver = new GameTextReceiver();
             registerReceiver(mReceiver, new IntentFilter(Telephony.Sms.Intents.SMS_RECEIVED_ACTION));
         }
 
@@ -241,6 +244,11 @@ public class TextGameMainActivity extends AppCompatActivity
         if (mGoogleApiClient != null) {
             LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
         }
+
+        if (mReceiver != null) {
+            unregisterReceiver(mReceiver);
+            mReceiver = null;
+        }
     }
 
     @Override
@@ -248,7 +256,7 @@ public class TextGameMainActivity extends AppCompatActivity
         super.onResume();
 
         if (mReceiver == null) {
-            mReceiver = new LandingTextReceiver();
+            mReceiver = new GameTextReceiver();
             registerReceiver(mReceiver, new IntentFilter(Telephony.Sms.Intents.SMS_RECEIVED_ACTION));
         }
 
@@ -414,6 +422,10 @@ public class TextGameMainActivity extends AppCompatActivity
                 float distances[] = new float[3];
                 Location.distanceBetween(mLastLocation.getLatitude(), mLastLocation.getLongitude(), ts.getLat(), ts.getLong(), distances);
                 if (distances[0] < TREASURE_DISTANCE_THRESHOLD_M) {
+                    ourScore += 1;
+                    TextView t = (TextView) this.findViewById(R.id.teamScore);
+                    String scoreString = Integer.toString(ourScore);
+                    t.setText(scoreString);
                     ts.setTaken();
                     broadcastTreasureCaptured(i);
                     break;
@@ -520,61 +532,64 @@ public class TextGameMainActivity extends AppCompatActivity
         return BitmapDescriptorFactory.defaultMarker(hsv[0]);
     }
 
-    protected void eventHandler(JSONObject event) {
-        // process event
-    }
-
-    public class LandingTextReceiver extends BroadcastReceiver {
+    public class GameTextReceiver extends BroadcastReceiver {
         private PendingResult mPendingResult;
         @Override
         public void onReceive(final Context context, final Intent intent) {
             mPendingResult = goAsync();
-            AsyncTask<Void,Void,List<JSONObject>> asyncHandler = new AsyncTask<Void, Void, List<JSONObject> >() {
+            AsyncTask<Void,Void,List<Event> > asyncHandler = new AsyncTask<Void, Void, List<Event> >() {
                 @Override
-                protected List<JSONObject> doInBackground(Void... voids) {
-                    List<JSONObject> events = new ArrayList<JSONObject>();
+                protected List<Event> doInBackground(Void... voids) {
+                    List<Event> events = new ArrayList<Event>();
                     if (intent.getAction().equals(Telephony.Sms.Intents.SMS_RECEIVED_ACTION)) {
                         SmsMessage[] messages = Telephony.Sms.Intents.getMessagesFromIntent(intent);
 
-                        for (int i = 0; i < messages.length; ++i) {
-                            if (TextGameMainActivity.this.mPlayerNumbers.contains(messages[i].getDisplayOriginatingAddress())
-                                    || true) {
-                                Boolean failed = false;
-                                Inflater decompresser = new Inflater();
-                                byte[] messageText = Base64.decode(messages[i].getMessageBody(),Base64.DEFAULT);
-                                decompresser.setInput(messageText,0,messageText.length);
-                                byte[] result = new byte[100];
-                                StringBuilder stringifiedJSON = new StringBuilder();
-                                while (!decompresser.finished()) {
-                                    try{
-                                        decompresser.inflate(result);
-                                    } catch(DataFormatException e) {
-                                        failed = true;
-                                        break;
-                                    }
+                        StringBuilder m = new StringBuilder();
+                        for (int i = 0; i < messages.length; i++) {
+                            m.append(messages[i].getMessageBody());
+                        }
+                        //for (int i = 0; i < messages.length; ++i) {
+                        // if the message is from someone unexpected, this will error out
+                        // because we won't be able to parse the format
+                        Boolean failed = false;
+                        Inflater decompresser = new Inflater();
+                        byte[] messageText = Base64.decode(m.toString(),Base64.DEFAULT);
+                        decompresser.setInput(messageText,0,messageText.length);
+                        byte[] result = new byte[1024];
+                        StringBuilder stringifiedJSON = new StringBuilder();
+                        while (!decompresser.finished()) {
+                            try{
+                                decompresser.inflate(result);
+                            } catch(DataFormatException e) {
+                                failed = true;
+                                break;
+                            }
 
-                                    stringifiedJSON.append(new String(result));
-                                }
+                            stringifiedJSON.append(new String(result));
+                        }
 
-                                if (!failed) {
-                                    try {
-                                        JSONObject event = new JSONObject(stringifiedJSON.toString());
-                                        events.add(event);
-                                    } catch(JSONException e) {
-                                        Log.e("BROKEN_JSON",e.getMessage());
-                                    }
-                                }
+                        if (!failed) {
+                            try {
+                                JSONObject event = new JSONObject(stringifiedJSON.toString());
+                                String addr = messages[0].getDisplayOriginatingAddress();
+                                events.add(Event.fromJson(addr,event));
+                            } catch(JSONException e) {
+                                Log.e("BROKEN_JSON",e.getMessage());
+                            } catch(InvalidEventException e2) {
+                                Log.e("BROKEN_EVENT",e2.getMessage());
                             }
                         }
+                        //}
                     }
+
                     return events;
                 }
 
                 @Override
-                protected void onPostExecute(List<JSONObject> events) {
+                protected void onPostExecute(List<Event> events) {
                     if (events != null) {
                         for (int i = 0; i < events.size(); ++i) {
-                            TextGameMainActivity.this.eventHandler(events.get(i));
+                            events.get(i).handleEvent(TextGameMainActivity.this);
                         }
                     }
                     mPendingResult.finish();
@@ -603,6 +618,26 @@ public class TextGameMainActivity extends AppCompatActivity
 
     public List<String> getPlayerNumbers(){
         return mPlayerNumbers;
+    }
+
+    public void removeTreasureAtIndex(int i) {
+        mTreasureSpawns.get(i).setTaken();
+    }
+
+    public void incrementPlayerByNumber(String phoneNumber) {
+        int curScore = playerScores.get(phoneNumber);
+        playerScores.put(phoneNumber,curScore + 1);
+    }
+
+    public void setEnemyScore() {
+        int max = 0;
+        for (String key : playerScores.keySet()) {
+            if (playerScores.get(key) > max) {
+                max = playerScores.get(key);
+            }
+        }
+        TextView t = (TextView) this.findViewById(R.id.enemyScore);
+        t.setText(Integer.toString(max));
     }
 
 }
