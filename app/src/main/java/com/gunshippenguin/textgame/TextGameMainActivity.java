@@ -121,8 +121,7 @@ public class TextGameMainActivity extends AppCompatActivity
 
     Timer backgroundEventsTimer;
     TimerTask broadcastPositionTask;
-    TimerTask checkEnterLeaveCapturePointTask;
-    TimerTask checkChangeCapturePointTask;
+    TimerTask checkTreasureTask;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -217,23 +216,15 @@ public class TextGameMainActivity extends AppCompatActivity
                 broadcastPosition();
             }
         };
-        checkEnterLeaveCapturePointTask = new TimerTask() {
+        checkTreasureTask = new TimerTask() {
             @Override
             public void run() {
-                checkEnterLeaveCapturePoint();
-            }
-        };
-
-        checkChangeCapturePointTask = new TimerTask() {
-            @Override
-            public void run() {
-                checkChangeCapturePoint();
+                checkTreasure();
             }
         };
 
         backgroundEventsTimer.scheduleAtFixedRate(broadcastPositionTask, 60000, 60000);
-        backgroundEventsTimer.scheduleAtFixedRate(checkEnterLeaveCapturePointTask, 2000, 2000);
-        backgroundEventsTimer.scheduleAtFixedRate(checkChangeCapturePointTask, 2000, 2000);
+        backgroundEventsTimer.scheduleAtFixedRate(checkTreasureTask, 2000, 2000);
     }
 
     @Override
@@ -396,57 +387,13 @@ public class TextGameMainActivity extends AppCompatActivity
         return name;
     }
 
-    private CapturePoint getCapturePointByNumber(int number) {
-        for (CapturePoint capturePoint : mCapturePoints) {
-            if (capturePoint.getNumber() == number) {
-                return capturePoint;
-            }
-        }
-        throw new RuntimeException("Capture point with id " + Integer.toString(number) + " not found");
-    }
-
     private void broadcastPosition() {
         Event positionUpdateEvent = new PositionUpdateEvent("111", new Date(),
                 mLastLocation.getLatitude(), mLastLocation.getLongitude());
         positionUpdateEvent.sendToNumbers(getPlayerNumbers(), this);
     }
 
-    private void leaveCapturePoint() {
-        Event leaveCapturePointEvent = new LeftCapturePointEvent("111", new Date(),
-                mCurrentCapturePoint);
-        leaveCapturePointEvent.sendToNumbers(getPlayerNumbers(), this);
-    }
-
-    private void enterCapturePoint(int number) {
-        Event enterCapturePointEvent = new StartCaptureEvent("111", new Date(), number);
-        mCurrentCapturePoint = number;
-        enterCapturePointEvent.sendToNumbers(getPlayerNumbers(), this);
-    }
-
-    private void checkEnterLeaveCapturePoint() {
-        if (mCurrentCapturePoint != -1) { // Already on capture point
-            CapturePoint cp = getCapturePointByNumber(mCurrentCapturePoint);
-            Location cpLocation = new Location("");
-            cpLocation.setLatitude(cp.getLatLng().latitude);
-            cpLocation.setLongitude(cp.getLatLng().longitude);
-
-            if (mLastLocation.distanceTo(cpLocation) > CAPTURE_POINT_DISTANCE_THRESHOLD_M) {
-                leaveCapturePoint();
-            }
-        } else { // Not already on a capture point
-            for (CapturePoint cp : mCapturePoints) {
-                Location cpLocation  = new Location("");
-                cpLocation.setLatitude(cp.getLatLng().latitude);
-                cpLocation.setLongitude(cp.getLatLng().longitude);
-
-                if (mLastLocation.distanceTo(cpLocation) < CAPTURE_POINT_DISTANCE_THRESHOLD_M) {
-                    enterCapturePoint(cp.getNumber());
-                }
-            }
-        }
-    }
-
-    private void checkChangeCapturePoint() {
+    private void checkTreasure() {
 
     }
 
