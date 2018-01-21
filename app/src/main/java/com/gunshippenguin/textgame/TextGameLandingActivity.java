@@ -1,13 +1,22 @@
 
 package com.gunshippenguin.textgame;
 
+import android.*;
+import android.Manifest;
 import android.content.BroadcastReceiver;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.PackageManager;
+import android.database.Cursor;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.provider.BaseColumns;
+import android.provider.ContactsContract;
 import android.provider.Telephony;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.telephony.SmsMessage;
 import android.util.Base64;
@@ -19,6 +28,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.gms.games.Player;
 
@@ -33,6 +43,7 @@ import java.util.zip.Deflater;
 import java.util.zip.Inflater;
 
 public class TextGameLandingActivity extends AppCompatActivity {
+    private static final int PERMISSIONS_REQUEST_READ_CONTACTS = 17;
     private LandingTextReceiver mReceiver = null;
     private ArrayList<String> mPlayerNumbers = null;
     private Button mStartButton = null;
@@ -59,6 +70,13 @@ public class TextGameLandingActivity extends AppCompatActivity {
             mAdapter = new PlayerAdapter(this,R.layout.player_name);
         }
         getLobbyList(this).setAdapter(mAdapter);
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+
+        mAdapter.add(getContactNameByNumber("2509278604"));
     }
 
     public void onClickStart(View v) {
@@ -128,6 +146,16 @@ public class TextGameLandingActivity extends AppCompatActivity {
         }
     }
 
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                                           int[] grantResults) {
+        if (requestCode == PERMISSIONS_REQUEST_READ_CONTACTS) {
+            if (grantResults[0] != PackageManager.PERMISSION_GRANTED) {
+                Toast.makeText(this, "Until you grant the permission, we can't get your friends' names", Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+
     private Button getStartButton(AppCompatActivity activity) {
         if (mStartButton == null) {
             mStartButton = activity.findViewById(R.id.startButton);
@@ -172,8 +200,7 @@ public class TextGameLandingActivity extends AppCompatActivity {
                 String temp = numbers.getString(i);
                 if (!mPlayerNumbers.contains(temp)) {
                     mPlayerNumbers.add(temp);
-                    //TODO: look up contact name and add instead of phone number
-                    mAdapter.add(temp);
+                    mAdapter.add(getContactNameByNumber(temp));
                 }
             }
 
@@ -201,6 +228,34 @@ public class TextGameLandingActivity extends AppCompatActivity {
         String compressedJSON = Base64.encodeToString(result,Base64.DEFAULT);
 
         // launch an intent
+    }
+
+    public String getContactNameByNumber(String number) {
+        String name = "?";
+
+        if (checkSelfPermission(android.Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(new String[]{android.Manifest.permission.READ_CONTACTS}, PERMISSIONS_REQUEST_READ_CONTACTS);
+        } else {
+            Uri uri = Uri.withAppendedPath(ContactsContract.PhoneLookup.CONTENT_FILTER_URI, Uri.encode(number));
+
+            ContentResolver contentResolver = getContentResolver();
+            Cursor contactLookup = contentResolver.query(uri, new String[] {BaseColumns._ID,
+                    ContactsContract.PhoneLookup.DISPLAY_NAME }, null, null, null);
+
+            try {
+                if (contactLookup != null && contactLookup.getCount() > 0) {
+                    contactLookup.moveToNext();
+                    name = contactLookup.getString(contactLookup.getColumnIndex(ContactsContract.Data.DISPLAY_NAME));
+                    // String contactId = contactLookup.getString(contactLookup.getColumnIndex(BaseColumns._ID));
+                }
+            } finally {
+                if (contactLookup != null) {
+                    contactLookup.close();
+                }
+            }
+
+        }
+        return name;
     }
 
     public class PlayerAdapter extends ArrayAdapter<String> {
